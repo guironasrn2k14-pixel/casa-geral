@@ -3,97 +3,597 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestão de Água e Luz - Quintal</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="style.css">
+  <title>Guironas — Atmospheric Minimalist RPG</title>
+  <!-- Google Fonts & Font Awesome Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    /* ==========================================================
+       RESET & BASE STYLES
+       ========================================================== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Rajdhani', sans-serif;
+      color: #e0f7fc;
+      background-color: #080a0f;
+    }
+
+    /* ==========================================================
+       1. ATMOSPHERIC DYNAMIC BACKGROUND (WEATHER OVERLAY)
+       ========================================================== */
+    #weather-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-size: cover;
+      background-position: center;
+      transition: background-image 1.5s ease-in-out, filter 1s ease;
+      z-index: 1;
+      filter: brightness(0.65) contrast(1.1);
+    }
+
+    /* Efeito realista de Chuva no Vidro / Gotas */
+    .rain-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 2;
+      background: radial-gradient(circle at 50% 50%, rgba(10, 15, 25, 0.2), rgba(5, 8, 15, 0.75));
+      opacity: 0;
+      transition: opacity 1s ease;
+    }
+
+    .rain-overlay.active {
+      opacity: 1;
+      /* Aplica um padrão procedural de gotas e desfocagem sutil no vidro */
+      backdrop-filter: blur(2px);
+    }
+
+    /* Canvas para partículas de chuva animadas */
+    #rain-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    /* ==========================================================
+       2. TOP HUD (STATUS COMPACTO & NEON)
+       ========================================================== */
+    .top-hud {
+      position: fixed;
+      top: 15px;
+      left: 75px;
+      right: 20px;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 16px;
+      background: rgba(10, 16, 26, 0.45);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(0, 229, 255, 0.25);
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), inset 0 0 10px rgba(0, 229, 255, 0.05);
+    }
+
+    .profile-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 2px solid #00e5ff;
+      box-shadow: 0 0 8px rgba(0, 229, 255, 0.6);
+      background: #111;
+      object-fit: cover;
+    }
+
+    .player-details h1 {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 11px;
+      color: #00e5ff;
+      text-shadow: 0 0 8px rgba(0, 229, 255, 0.8);
+      letter-spacing: 1px;
+    }
+
+    .player-details span {
+      font-size: 12px;
+      color: #a0c0d0;
+      font-weight: 600;
+    }
+
+    .vitals {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      width: 140px;
+    }
+
+    .bar-container {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      font-weight: bold;
+    }
+
+    .bar-bg {
+      flex: 1;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.4s ease;
+    }
+
+    .hp-fill { background: #ff3366; box-shadow: 0 0 6px #ff3366; width: 85%; }
+    .en-fill { background: #00e5ff; box-shadow: 0 0 6px #00e5ff; width: 60%; }
+    .xp-fill { background: #ffcc00; box-shadow: 0 0 6px #ffcc00; width: 40%; }
+
+    .weather-widget {
+      text-align: right;
+      font-size: 13px;
+      font-weight: 600;
+      color: #e0f7fc;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    }
+
+    .weather-widget .clock {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 12px;
+      color: #00e5ff;
+      margin-bottom: 2px;
+    }
+
+    /* ==========================================================
+       3. RETRACTABLE SIDE DOCK (MENU LATERAL RECOLHÍVEL)
+       ========================================================== */
+    .side-dock {
+      position: fixed;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding: 16px 10px;
+      background: rgba(10, 16, 26, 0.35);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(0, 229, 255, 0.2);
+      border-radius: 30px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .dock-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #a0c0d0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .dock-btn:hover, .dock-btn.active {
+      color: #00e5ff;
+      background: rgba(0, 229, 255, 0.15);
+      border-color: #00e5ff;
+      box-shadow: 0 0 12px rgba(0, 229, 255, 0.5);
+      transform: scale(1.1);
+    }
+
+    /* ==========================================================
+       4. EXPANDABLE RPG MODULES (DAILY QUESTS & LOGS)
+       ========================================================== */
+    .bottom-modules {
+      position: fixed;
+      bottom: 20px;
+      left: 75px;
+      right: 20px;
+      z-index: 10;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      transition: transform 0.4s ease, opacity 0.4s ease;
+    }
+
+    .bottom-modules.hidden {
+      transform: translateY(120%);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .glass-card {
+      background: rgba(10, 16, 26, 0.45);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(0, 229, 255, 0.2);
+      border-radius: 14px;
+      padding: 14px 18px;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(0, 229, 255, 0.15);
+    }
+
+    .card-header h2 {
+      font-size: 13px;
+      font-family: 'Press Start 2P', monospace;
+      color: #00e5ff;
+      letter-spacing: 0.5px;
+    }
+
+    .quest-tabs {
+      display: flex;
+      gap: 6px;
+    }
+
+    .tab-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #a0c0d0;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .tab-btn.active {
+      background: #00e5ff;
+      color: #080a0f;
+      border-color: #00e5ff;
+      box-shadow: 0 0 8px rgba(0, 229, 255, 0.6);
+    }
+
+    .quest-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .quest-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .quest-item input[type="checkbox"] {
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border: 1px solid #00e5ff;
+      border-radius: 4px;
+      background: rgba(0, 0, 0, 0.3);
+      cursor: pointer;
+      position: relative;
+    }
+
+    .quest-item input[type="checkbox"]:checked {
+      background: #00e5ff;
+      box-shadow: 0 0 8px #00e5ff;
+    }
+
+    .quest-item input[type="checkbox"]:checked::after {
+      content: '✓';
+      position: absolute;
+      color: #080a0f;
+      font-size: 11px;
+      font-weight: bold;
+      top: -1px;
+      left: 3px;
+    }
+
+    .log-input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(0, 229, 255, 0.2);
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: #e0f7fc;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 13px;
+      margin-bottom: 6px;
+      outline: none;
+    }
+
+    .log-input:focus {
+      border-color: #00e5ff;
+      box-shadow: 0 0 8px rgba(0, 229, 255, 0.3);
+    }
+
+    /* Botão Flutuante Atributos */
+    .attributes-btn {
+      position: fixed;
+      bottom: 220px;
+      right: 25px;
+      z-index: 10;
+      background: rgba(10, 16, 26, 0.6);
+      border: 1px solid #00e5ff;
+      color: #00e5ff;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 9px;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 0 12px rgba(0, 229, 255, 0.4);
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .attributes-btn:hover {
+      transform: scale(1.05);
+      background: #00e5ff;
+      color: #080a0f;
+      box-shadow: 0 0 20px rgba(0, 229, 255, 0.8);
+    }
+
+    /* Media Queries para Telas Pequenas/Mobile */
+    @media (max-width: 768px) {
+      .bottom-modules {
+        grid-template-columns: 1fr;
+        bottom: 15px;
+      }
+      .top-hud {
+        left: 65px;
+      }
+      .attributes-btn {
+        bottom: 340px;
+      }
+    }
+  </style>
 </head>
-<body class="bg-gray-100 font-sans min-h-screen pb-12">
+<body>
 
-  <!-- Header -->
-  <header class="bg-slate-800 text-white p-4 shadow-md">
-    <div class="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-      <div>
-        <h1 class="text-xl font-bold flex items-center gap-2">
-          <span>🏠</span> Gestão de Água e Luz
-        </h1>
-        <p class="text-xs text-slate-300">Painel de controle de contas do quintal (5 Famílias)</p>
-      </div>
-      
-      <!-- Seletor de Mês/Ano -->
-      <div class="flex items-center gap-2 bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-600">
-        <label for="monthSelect" class="text-xs font-medium text-slate-300">Mês de Referência:</label>
-        <input type="month" id="monthSelect" class="bg-slate-800 text-white text-sm rounded px-2 py-1 outline-none border border-slate-600">
-      </div>
-    </div>
-  </header>
+  <!-- 1. BACKGROUND ATMOSFÉRICO DINÂMICO -->
+  <div id="weather-bg"></div>
+  <div id="rain-overlay" class="rain-overlay"></div>
+  <canvas id="rain-canvas"></canvas>
 
-  <main class="max-w-4xl mx-auto p-4 space-y-6">
-
-    <!-- Resumo de Métrica -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-        <p class="text-xs font-semibold text-gray-500 uppercase">Total do Mês</p>
-        <p id="totalMonthValue" class="text-2xl font-bold text-gray-800">R$ 0,00</p>
-        <p class="text-xs text-gray-400 mt-1">Soma de Água + Luz do quintal</p>
-      </div>
-      <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-        <p class="text-xs font-semibold text-gray-500 uppercase">Total Arrecadado</p>
-        <p id="totalPaidValue" class="text-2xl font-bold text-emerald-600">R$ 0,00</p>
-        <span id="paidPercentageBadge" class="inline-block mt-1 text-xs px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full font-medium">0% Pago</span>
-      </div>
-      <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-        <p class="text-xs font-semibold text-gray-500 uppercase">Restante Pendente</p>
-        <p id="totalPendingValue" class="text-2xl font-bold text-red-500">R$ 0,00</p>
-        <span id="pendingPercentageBadge" class="inline-block mt-1 text-xs px-2 py-0.5 bg-red-100 text-red-800 rounded-full font-medium">0% Pendente</span>
+  <!-- 2. TOP HUD (SISTEMA & STATUS DE GUIRONAS) -->
+  <div class="top-hud">
+    <div class="profile-info">
+      <img src="icon-192.png" alt="Guironas Avatar" class="avatar" onerror="this.src='https://via.placeholder.com/38'">
+      <div class="player-details">
+        <h1>GUIRONAS</h1>
+        <span>LVL 1 · Aprendiz</span>
       </div>
     </div>
 
-    <!-- Navegação de Abas -->
-    <div class="flex border-b border-gray-200 bg-white rounded-t-xl overflow-hidden shadow-sm">
-      <button onclick="switchTab('visão-geral')" id="tab-visão-geral" class="tab-btn flex-1 py-3 px-4 text-center font-medium text-sm border-b-2 border-emerald-600 text-emerald-600 bg-emerald-50">
-        Visão Geral
-      </button>
-      <button onclick="switchTab('historico')" id="tab-historico" class="tab-btn flex-1 py-3 px-4 text-center font-medium text-sm text-gray-500 hover:text-gray-700 border-b-2 border-transparent">
-        Histórico de Pagamentos
-      </button>
-      <button onclick="switchTab('administrar')" id="tab-administrar" class="tab-btn flex-1 py-3 px-4 text-center font-medium text-sm text-gray-500 hover:text-gray-700 border-b-2 border-transparent">
-        Lançar / Atualizar
-      </button>
+    <div class="vitals">
+      <div class="bar-container">
+        <span style="color:#ff3366;">HP</span>
+        <div class="bar-bg"><div class="bar-fill hp-fill"></div></div>
+      </div>
+      <div class="bar-container">
+        <span style="color:#00e5ff;">EN</span>
+        <div class="bar-bg"><div class="bar-fill en-fill"></div></div>
+      </div>
+      <div class="bar-container">
+        <span style="color:#ffcc00;">XP</span>
+        <div class="bar-bg"><div class="bar-fill xp-fill"></div></div>
+      </div>
     </div>
 
-    <!-- Conteúdo Aba 1: Visão Geral -->
-    <section id="content-visão-geral" class="space-y-4">
-      <div class="flex justify-between items-center">
-        <h2 class="text-lg font-bold text-gray-800">Status das Famílias</h2>
-        <button onclick="copyWhatsAppSummary()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-2 rounded-lg font-medium shadow-sm transition flex items-center gap-1">
-          <span>📲</span> Copiar Resumo p/ WhatsApp
-        </button>
-      </div>
+    <div class="weather-widget">
+      <div class="clock" id="clock">18:54</div>
+      <div id="weather-text">São Paulo · 23° 🌧️ 45%</div>
+    </div>
+  </div>
 
-      <div id="familiesList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Cards gerados via JS -->
-      </div>
-    </section>
+  <!-- 3. DOCK LATERAL RECOLHÍVEL (REF: FOTO 2) -->
+  <nav class="side-dock">
+    <button class="dock-btn active" title="Início"><i class="fa-solid fa-house"></i></button>
+    <button class="dock-btn" title="Missões"><i class="fa-solid fa-scroll"></i></button>
+    <button class="dock-btn" title="Treino"><i class="fa-solid fa-dumbbell"></i></button>
+    <button class="dock-btn" title="Atributos" id="toggle-modules-btn"><i class="fa-solid fa-chart-pie"></i></button>
+    <button class="dock-btn" title="Logs / Notas"><i class="fa-solid fa-pen-to-square"></i></button>
+    <button class="dock-btn" title="Configurações"><i class="fa-solid fa-gear"></i></button>
+  </nav>
 
-    <!-- Conteúdo Aba 2: Histórico -->
-    <section id="content-historico" class="hidden space-y-4 bg-white p-4 rounded-b-xl shadow-sm border border-gray-200">
-      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 pb-3 border-b border-gray-100">
-        <div>
-          <h2 class="text-lg font-bold text-gray-800">Histórico de Contas Pagas</h2>
-          <p class="text-xs text-gray-500">Consulta das datas e confirmações de pagamentos efetuados</p>
-        </div>
-        <div class="flex gap-2 w-full md:w-auto">
-          <select id="filterFamily" onchange="renderHistory()" class="text-xs border rounded-lg p-2 bg-gray-50 outline-none w-full md:w-auto">
-            <option value="ALL">Todas as Famílias</option>
-            <option value="1">Família 1 (Casa 1)</option>
-            <option value="2">Família 2 (Casa 2)</option>
-            <option value="3">Família 3 (Casa 3)</option>
-            <option value="4">Família 4 (Casa 4)</option>
-            <option value="5">Família 5 (Casa 5)</option>
-          </select>
+  <!-- BOTÃO FLUTUANTE DE ATRIBUTOS -->
+  <button class="attributes-btn" id="attr-btn">
+    <i class="fa-solid fa-wifi"></i> Atributos
+  </button>
+
+  <!-- 4. PAINÉIS TRANSLÚCIDOS (DAILY QUESTS & LOGS) -->
+  <div class="bottom-modules" id="bottom-modules">
+    <!-- Bloco Daily Quests -->
+    <div class="glass-card">
+      <div class="card-header">
+        <h2>DAILY QUESTS</h2>
+        <div class="quest-tabs">
+          <button class="tab-btn active">A</button>
+          <button class="tab-btn">B</button>
+          <button class="tab-btn">C</button>
+          <button class="tab-btn">D</button>
         </div>
       </div>
+      <ul class="quest-list">
+        <li class="quest-item">
+          <input type="checkbox" id="q1" checked>
+          <label for="q1">Supino reto</label>
+        </li>
+        <li class="quest-item">
+          <input type="checkbox" id="q2">
+          <label for="q2">Crucifixo</label>
+        </li>
+        <li class="quest-item">
+          <input type="checkbox" id="q3">
+          <label for="q3">Tríceps na polia</label>
+        </li>
+      </ul>
+    </div>
 
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-sm">
-          <thead class="bg-gray
+    <!-- Bloco Logs & Notas -->
+    <div class="glass-card">
+      <div class="card-header">
+        <h2>LOGS & NOTAS 📜</h2>
+        <i class="fa-solid fa-lightbulb" style="color:#ffcc00; cursor:pointer;" title="Sincronizar Google Keep"></i>
+      </div>
+      <input type="text" class="log-input" placeholder="Digitar: texto rápido..." id="note1">
+      <input type="text" class="log-input" placeholder="Digitar: lista de compras..." id="note2">
+    </div>
+  </div>
+
+  <!-- ==========================================================
+       5. LÓGICA JAVASCRIPT & CLIMA DINÂMICO
+       ========================================================== -->
+  <script>
+    // RELÓGIO EM TEMPO REAL
+    function updateClock() {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      document.getElementById('clock').textContent = `${hours}:${minutes}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // INTERFACE RECOLHÍVEL (OCULTAR / EXIBIR MÓDULOS)
+    const modules = document.getElementById('bottom-modules');
+    const toggleBtn = document.getElementById('toggle-modules-btn');
+    const attrBtn = document.getElementById('attr-btn');
+
+    function toggleInterface() {
+      modules.classList.toggle('hidden');
+    }
+
+    toggleBtn.addEventListener('click', toggleInterface);
+    attrBtn.addEventListener('click', toggleInterface);
+
+    // SISTEMA DE GEOLOCALIZAÇÃO E CLIMA (OPEN-METEO)
+    async function fetchWeather(lat, lon) {
+      try {
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&hourly=precipitation_probability`);
+        const data = await res.json();
+        
+        const temp = Math.round(data.current_weather.temperature);
+        const code = data.current_weather.weathercode;
+        const isRain = code >= 50; // Códigos de chuva na Open-Meteo
+
+        document.getElementById('weather-text').textContent = `Local · ${temp}°C ${isRain ? '🌧️ 80%' : '☀️ 10%'}`;
+        applyAtmosphere(isRain, temp);
+      } catch (e) {
+        // Fallback padrão se houver erro
+        applyAtmosphere(true, 23);
+      }
+    }
+
+    function applyAtmosphere(isRain, temp) {
+      const bg = document.getElementById('weather-bg');
+      const rainOverlay = document.getElementById('rain-overlay');
+
+      if (isRain) {
+        // Imagem de fundo estilo chuva no vidro (Foto 1)
+        bg.style.backgroundImage = "url('https://images.unsplash.com/photo-1519692933481-e162a57d6721?q=80&w=1920&auto=format&fit=crop')";
+        rainOverlay.classList.add('active');
+        startRainAnimation();
+      } else {
+        // Fundo ensolarado / limpo
+        bg.style.backgroundImage = "url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1920&auto=format&fit=crop')";
+        rainOverlay.classList.remove('active');
+      }
+    }
+
+    // ANIMAÇÃO DE GOTAS DE CHUVA NO CANVAS
+    function startRainAnimation() {
+      const canvas = document.getElementById('rain-canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const drops = Array.from({ length: 70 }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        length: Math.random() * 20 + 10,
+        speed: Math.random() * 8 + 4,
+        opacity: Math.random() * 0.4 + 0.1
+      }));
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = 'rgba(180, 220, 255, 0.4)';
+        ctx.lineWidth = 1;
+
+        drops.forEach(drop => {
+          ctx.beginPath();
+          ctx.moveTo(drop.x, drop.y);
+          ctx.lineTo(drop.x, drop.y + drop.length);
+          ctx.stroke();
+
+          drop.y += drop.speed;
+          if (drop.y > canvas.height) {
+            drop.y = -drop.length;
+            drop.x = Math.random() * canvas.width;
+          }
+        });
+        requestAnimationFrame(draw);
+      }
+      draw();
+    }
+
+    // OBTER LOCALIZAÇÃO DO NAVEGADOR
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        pos => fetchWeather(pos.coords.latitude, pos.coords.longitude),
+        () => fetchWeather(-23.5505, -46.6333) // Padrão São Paulo se não aceitar
+      );
+    } else {
+      fetchWeather(-23.5505, -46.6333);
+    }
+  </script>
+</body>
+</html>
