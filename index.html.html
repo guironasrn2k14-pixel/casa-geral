@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão de Água e Luz - Quintal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-100 font-sans min-h-screen pb-12">
+
+  <!-- Header -->
+  <header class="bg-slate-800 text-white p-4 shadow-md">
+    <div class="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+      <div>
+        <h1 class="text-xl font-bold flex items-center gap-2">
+          <span>🏠</span> Gestão de Água e Luz
+        </h1>
+        <p class="text-xs text-slate-300">Painel de controle de contas do quintal (5 Famílias)</p>
+      </div>
+      
+      <!-- Seletor de Mês/Ano -->
+      <div class="flex items-center gap-2 bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-600">
+        <label for="monthSelect" class="text-xs font-medium text-slate-300">Mês de Referência:</label>
+        <input type="month" id="monthSelect" class="bg-slate-800 text-white text-sm rounded px-2 py-1 outline-none border border-slate-600">
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto p-4 space-y-6">
+
+    <!-- Resumo de Métrica -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+        <p class="text-xs font-semibold text-gray-500 uppercase">Total do Mês</p>
+        <p id="totalMonthValue" class="text-2xl font-bold text-gray-800">R$ 0,00</p>
+        <p class="text-xs text-gray-400 mt-1">Soma de Água + Luz do quintal</p>
+      </div>
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+        <p class="text-xs font-semibold text-gray-500 uppercase">Total Arrecadado</p>
+        <p id="totalPaidValue" class="text-2xl font-bold text-emerald-600">R$ 0,00</p>
+        <span id="paidPercentageBadge" class="inline-block mt-1 text-xs px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full font-medium">0% Pago</span>
+      </div>
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+        <p class="text-xs font-semibold text-gray-500 uppercase">Restante Pendente</p>
+        <p id="totalPendingValue" class="text-2xl font-bold text-red-500">R$ 0,00</p>
+        <span id="pendingPercentageBadge" class="inline-block mt-1 text-xs px-2 py-0.5 bg-red-100 text-red-800 rounded-full font-medium">0% Pendente</span>
+      </div>
+    </div>
+
+    <!-- Navegação de Abas -->
+    <div class="flex border-b border-gray-200 bg-white rounded-t-xl overflow-hidden shadow-sm">
+      <button onclick="switchTab('visão-geral')" id="tab-visão-geral" class="tab-btn flex-1 py-3 px-4 text-center font-medium text-sm border-b-2 border-emerald-600 text-emerald-600 bg-emerald-50">
+        Visão Geral
+      </button>
+      <button onclick="switchTab('historico')" id="tab-historico" class="tab-btn flex-1 py-3 px-4 text-center font-medium text-sm text-gray-500 hover:text-gray-700 border-b-2 border-transparent">
+        Histórico de Pagamentos
+      </button>
+      <button onclick="switchTab('administrar')" id="tab-administrar" class="tab-btn flex-1 py-3 px-4 text-center font-medium text-sm text-gray-500 hover:text-gray-700 border-b-2 border-transparent">
+        Lançar / Atualizar
+      </button>
+    </div>
+
+    <!-- Conteúdo Aba 1: Visão Geral -->
+    <section id="content-visão-geral" class="space-y-4">
+      <div class="flex justify-between items-center">
+        <h2 class="text-lg font-bold text-gray-800">Status das Famílias</h2>
+        <button onclick="copyWhatsAppSummary()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-2 rounded-lg font-medium shadow-sm transition flex items-center gap-1">
+          <span>📲</span> Copiar Resumo p/ WhatsApp
+        </button>
+      </div>
+
+      <div id="familiesList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Cards gerados via JS -->
+      </div>
+    </section>
+
+    <!-- Conteúdo Aba 2: Histórico -->
+    <section id="content-historico" class="hidden space-y-4 bg-white p-4 rounded-b-xl shadow-sm border border-gray-200">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 pb-3 border-b border-gray-100">
+        <div>
+          <h2 class="text-lg font-bold text-gray-800">Histórico de Contas Pagas</h2>
+          <p class="text-xs text-gray-500">Consulta das datas e confirmações de pagamentos efetuados</p>
+        </div>
+        <div class="flex gap-2 w-full md:w-auto">
+          <select id="filterFamily" onchange="renderHistory()" class="text-xs border rounded-lg p-2 bg-gray-50 outline-none w-full md:w-auto">
+            <option value="ALL">Todas as Famílias</option>
+            <option value="1">Família 1 (Casa 1)</option>
+            <option value="2">Família 2 (Casa 2)</option>
+            <option value="3">Família 3 (Casa 3)</option>
+            <option value="4">Família 4 (Casa 4)</option>
+            <option value="5">Família 5 (Casa 5)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-gray
