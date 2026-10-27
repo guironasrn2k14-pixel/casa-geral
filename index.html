@@ -4,6 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Jambalaya</title>
+<meta name="theme-color" content="#16305a">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Jambalaya">
+<script>
+if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){
+  window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})});
+}
+</script>
 <script src="https://cdn.tailwindcss.com/3.4.17"></script>
 <script>tailwind.config={darkMode:'class'}</script>
 <script>try{if(localStorage.getItem('quintal:tema')==='escuro')document.documentElement.classList.add('dark')}catch(e){}</script>
@@ -16,12 +28,15 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 <body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-50 min-h-screen pb-8">
 
 <header class="bg-[#16305a] dark:bg-slate-900 text-white px-4 pt-3 pb-4 sticky top-0 z-20 shadow">
-  <div id="relogio" class="text-right text-sm opacity-90"></div>
+  <div class="flex items-center justify-between gap-2">
+    <button id="btnInstalar" class="hidden bg-white/15 hover:bg-white/25 rounded-full px-3 py-1 text-sm font-semibold">📲 Instalar app</button>
+    <div id="relogio" class="ml-auto text-right text-sm opacity-90"></div>
+  </div>
   <div class="flex items-center gap-3 mt-1">
     <div class="text-3xl bg-white/10 rounded-xl w-12 h-12 flex items-center justify-center" aria-hidden="true">🏠</div>
     <div class="flex-1 min-w-0">
       <h1 class="text-xl font-bold leading-tight">Jambalaya</h1>
-      <p class="text-sm opacity-90">Água &amp; Luz (5 Famílias)</p>
+      <p class="text-sm opacity-90">Água &amp; Luz (5 Famílias) <span id="nuvem"></span></p>
     </div>
     <button id="btnTema" class="bg-white/15 hover:bg-white/25 rounded-full w-12 h-12 text-2xl" aria-label="Trocar entre tema claro e escuro">🌙</button>
   </div>
@@ -55,7 +70,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
     <button data-aba="hist" class="aba px-4 py-3 font-semibold whitespace-nowrap">🧾 Histórico</button>
     <button data-aba="admin" class="aba px-4 py-3 font-semibold whitespace-nowrap">✏️ Lançar / Administrar</button>
     <button data-aba="outros" class="aba px-4 py-3 font-semibold whitespace-nowrap">🏦 Caixinha do Quintal</button>
-    <button data-aba="convivencia" class="aba px-4 py-3 font-semibold whitespace-nowrap">🤝 Boa Convivência</button>
   </nav>
 
   <!-- VISÃO GERAL -->
@@ -128,7 +142,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
       <button class="w-full bg-[#16305a] hover:bg-[#1d3f75] text-white font-bold rounded-xl py-3">Salvar nomes</button>
     </form>
 
-    <button id="btnLimpar" class="w-full border-2 border-red-600 text-red-700 dark:text-red-400 font-semibold rounded-xl py-3">Apagar todos os dados deste aparelho</button>
+    <button id="btnLimpar" class="w-full border-2 border-red-600 text-red-700 dark:text-red-400 font-semibold rounded-xl py-3">Apagar TODOS os dados (de todos os celulares)</button>
   </section>
   <!-- OUTROS -->
   <section id="aba-outros" class="mt-4 hidden space-y-5">
@@ -174,23 +188,26 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
       <button class="w-full bg-[#16305a] hover:bg-[#1d3f75] text-white font-bold rounded-xl py-3">Criar caixinha</button>
     </form>
   </section>
-  <!-- BOA CONVIVÊNCIA -->
-  <section id="aba-convivencia" class="mt-4 hidden space-y-4">
-    <div>
-      <h2 class="text-xl font-bold">🤝 Boa Convivência</h2>
-      <p class="opacity-80">Combinados simples para o quintal ser um lugar bom para todo mundo.</p>
-    </div>
-    <div id="acordos" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
-    <p class="rounded-xl bg-sky-100 dark:bg-sky-950 text-sky-900 dark:text-sky-100 p-3">💙 Um quintal bom é feito de pequenos cuidados. Se algo incomodar, converse com educação: quase sempre se resolve rápido.</p>
-    <button id="btnZapAcordos" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl py-3 text-lg">📋 Copiar combinados para o Zap</button>
-  </section>
 </main>
 
 <div id="aviso" class="fixed left-1/2 -translate-x-1/2 bottom-6 bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-4 py-3 rounded-xl shadow-lg hidden z-30"></div>
 
 
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script>
-const CHAVE='quintal:v1';
+const CHAVE='quintal:v1', MIGRADO='quintal:migrado';
+
+/* ============ CONFIGURAÇÃO DO FIREBASE: cole aqui os dados do seu projeto ============ */
+const FIREBASE_CONFIG={
+  apiKey:"COLE_AQUI_SUA_API_KEY",
+  authDomain:"SEU-PROJETO.firebaseapp.com",
+  databaseURL:"https://SEU-PROJETO-default-rtdb.firebaseio.com",
+  projectId:"SEU-PROJETO",
+  appId:"COLE_AQUI_SEU_APP_ID"
+};
+const NUVEM_CAMINHO='jambalaya/estado';
+/* ====================================================================================== */
 const CONTAS=[{k:'agua',ic:'💧',nome:'Água'},{k:'luz',ic:'⚡',nome:'Luz'}];
 const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const $=s=>document.querySelector(s);
@@ -199,9 +216,23 @@ const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 const p2=n=>String(n).padStart(2,'0');
 
 const padrao=()=>({valores:{agua:50,luz:80},familias:[1,2,3,4,5].map(n=>({nome:'Família '+n,casa:'Casa '+n})),pagos:{},fundos:[],valoresMes:{}});
-function carregar(){try{const d=JSON.parse(localStorage.getItem(CHAVE));if(d&&d.familias&&d.valores&&d.pagos){d.fundos=d.fundos||[];d.valoresMes=d.valoresMes||{};return d}}catch(e){}return padrao()}
-function salvar(){try{localStorage.setItem(CHAVE,JSON.stringify(S))}catch(e){aviso('⚠️ Não consegui salvar neste aparelho.')}}
-let S=carregar(), mesAtual='';
+function normalizar(d){
+  const b=padrao(),o=Object.assign({},b,d||{});
+  const fam=Object.values(o.familias||{}).filter(Boolean).map((f,i)=>({nome:f.nome||('Família '+(i+1)),casa:f.casa||('Casa '+(i+1))}));
+  o.familias=fam.length?fam:b.familias;
+  o.valores=o.valores||b.valores;o.pagos=o.pagos||{};o.valoresMes=o.valoresMes||{};
+  o.fundos=Object.values(o.fundos||{}).filter(Boolean).map(f=>Object.assign({},f,{contribs:f.contribs||{}}));
+  return o;
+}
+function carregar(){try{const d=JSON.parse(localStorage.getItem(CHAVE));if(d&&d.familias)return normalizar(d)}catch(e){}return padrao()}
+function salvar(){
+  try{localStorage.setItem(CHAVE,JSON.stringify(S))}catch(e){aviso('⚠️ Não consegui salvar neste aparelho.')}
+  if(nuvem){
+    try{nuvem.set(JSON.parse(JSON.stringify(S))).catch(()=>aviso('⚠️ Não consegui enviar para a nuvem.'))}
+    catch(e){aviso('⚠️ Não consegui enviar para a nuvem.')}
+  }
+}
+let S=carregar(), mesAtual='', nuvem=null;
 
 /* ---------- datas ---------- */
 const hojeISO=()=>{const d=new Date();return `${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`};
@@ -276,17 +307,23 @@ function renderHist(){
 }
 function montarSelects(){
   const opMes=MES_LISTA.map(m=>`<option value="${m}">${nomeMes(m)}</option>`).join('');
+  const vh=$('#hMes').value||'todos',vp=$('#pFam').value;
   $('#mes').innerHTML=opMes;
   $('#hMes').innerHTML='<option value="todos">Todos os meses</option>'+opMes;
   $('#minhaFam').innerHTML='<option value="">— Escolha seu nome —</option>'+S.familias.map((f,i)=>`<option value="${i}">${esc(f.nome)}</option>`).join('');
   try{$('#minhaFam').value=localStorage.getItem('quintal:minhaFam')||''}catch(e){}
   $('#pFam').innerHTML=S.familias.map((f,i)=>`<option value="${i}">${esc(f.nome)} (${esc(f.casa)})</option>`).join('');
-  $('#nomesCampos').innerHTML=S.familias.map((f,i)=>`
-    <div class="grid grid-cols-2 gap-2">
-      <input data-nome="${i}" value="${esc(f.nome)}" aria-label="Nome da família ${i+1}" class="rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-3 py-2">
-      <input data-casa="${i}" value="${esc(f.casa)}" aria-label="Casa da família ${i+1}" class="rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-3 py-2">
-    </div>`).join('');
-  
+  if(vp)$('#pFam').value=vp;
+  if(mesAtual)$('#mes').value=mesAtual;
+  $('#hMes').value=vh;
+  if(!$('#nomesCampos').contains(document.activeElement)){
+    const cls='rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-3 py-2';
+    $('#nomesCampos').innerHTML=S.familias.map((f,i)=>`
+      <div class="grid grid-cols-2 gap-2">
+        <input data-nome="${i}" value="${esc(f.nome)}" aria-label="Nome da família ${i+1}" class="${cls}">
+        <input data-casa="${i}" value="${esc(f.casa)}" aria-label="Casa da família ${i+1}" class="${cls}">
+      </div>`).join('');
+  }
 }
 
 /* ---------- caixinha (Outros) ---------- */
@@ -344,7 +381,7 @@ function aviso(t){const a=$('#aviso');a.textContent=t;a.classList.remove('hidden
 
 /* ---------- abas ---------- */
 function abrirAba(nome){
-  ['geral','hist','admin','outros','convivencia'].forEach(n=>$('#aba-'+n).classList.toggle('hidden',n!==nome));
+  ['geral','hist','admin','outros'].forEach(n=>$('#aba-'+n).classList.toggle('hidden',n!==nome));
   document.querySelectorAll('.aba').forEach(b=>{
     const on=b.dataset.aba===nome;
     b.classList.toggle('border-b-4',on);b.classList.toggle('border-[#16305a]',on);
@@ -431,7 +468,7 @@ $('#fNomes').onsubmit=e=>{
   salvar();montarSelects();render();aviso('✅ Nomes salvos!');
 };
 $('#btnLimpar').onclick=()=>{
-  if(confirm('Tem certeza? Isso apaga TODOS os pagamentos e valores salvos neste aparelho.')){
+  if(confirm('Atenção: isso apaga TODOS os pagamentos, valores e caixinhas de TODOS os celulares. Tem certeza?')&&confirm('Última confirmação: apagar tudo mesmo? Não dá para desfazer.')){
     S=padrao();salvar();montarSelects();$('#mes').value=mesAtual;render();aviso('Dados apagados.');
   }
 };
@@ -467,6 +504,7 @@ $('#fundoCards').onclick=e=>{
 
 /* ---------- valores por casa + "minha casa" ---------- */
 function renderValoresForm(){
+  if($('#valoresCampos').children.length&&$('#valoresCampos').contains(document.activeElement))return;
   const salvo=S.valoresMes[mesAtual];
   let base=salvo;
   if(!base){const ant=Object.keys(S.valoresMes).filter(m=>m<mesAtual).sort().pop();base=ant?S.valoresMes[ant]:null}
@@ -495,21 +533,53 @@ function renderMeu(){
 }
 $('#minhaFam').onchange=e=>{try{localStorage.setItem('quintal:minhaFam',e.target.value)}catch(err){}renderMeu()};
 
-/* ---------- boa convivência ---------- */
-const ACORDOS=[
- {ic:'🤫',t:'Silêncio depois das 22h',d:'Música baixa, conversa em voz baixa e cuidado com portão e portas à noite. Todo mundo precisa descansar.',cls:'bg-indigo-50 border-indigo-300 dark:bg-indigo-950 dark:border-indigo-700'},
- {ic:'💧',t:'Vazamento? Avise na hora',d:'Viu torneira pingando, cano molhado ou fio solto? Avise o grupo rápido. Resolver cedo economiza dinheiro de todos.',cls:'bg-sky-50 border-sky-300 dark:bg-sky-950 dark:border-sky-700'},
- {ic:'🧹',t:'Áreas comuns limpas',d:'Usou, deixou limpo. Varra, guarde o que pegou e não deixe objetos atrapalhando a passagem.',cls:'bg-emerald-50 border-emerald-300 dark:bg-emerald-950 dark:border-emerald-700'},
- {ic:'🗑️',t:'Lixo no lugar certo',d:'Lixo bem fechado, no lugar e nos dias combinados. Separe o que puder e não deixe sacos no chão.',cls:'bg-amber-50 border-amber-300 dark:bg-amber-950 dark:border-amber-700'},
- {ic:'💡',t:'Água e luz com consciência',d:'Torneira fechada, luz apagada ao sair. Cuidar do consumo ajuda a conta de todo mundo.',cls:'bg-yellow-50 border-yellow-300 dark:bg-yellow-950 dark:border-yellow-700'},
- {ic:'🙋',t:'Visitas e festas: combine antes',d:'Vai receber muita gente? Avise os vizinhos antes e respeite o horário de silêncio.',cls:'bg-rose-50 border-rose-300 dark:bg-rose-950 dark:border-rose-700'}
-];
-function renderAcordos(){
-  $('#acordos').innerHTML=ACORDOS.map(a=>`<div class="rounded-xl border-2 p-4 ${a.cls}"><div class="text-4xl" aria-hidden="true">${a.ic}</div><div class="mt-1 text-xl font-bold">${a.t}</div><p class="mt-1">${a.d}</p></div>`).join('');
+/* ---------- nuvem (Firebase Realtime Database) ---------- */
+function nuvemAtiva(){
+  return typeof firebase!=='undefined'&&/^https:\/\//.test(FIREBASE_CONFIG.databaseURL)&&FIREBASE_CONFIG.databaseURL.indexOf('SEU-PROJETO')<0;
 }
-$('#btnZapAcordos').onclick=async()=>{
-  const t='*🤝 Combinados do nosso quintal*\n\n'+ACORDOS.map(a=>`${a.ic} *${a.t}*\n${a.d}`).join('\n\n')+'\n\n💙 Quintal bom é feito de pequenos cuidados. Obrigado, pessoal!';
-  aviso(await copiar(t)?'✅ Combinados copiados! Cole no WhatsApp.':'⚠️ Não deu para copiar. Tente de novo.');
+function estadoNuvem(e){
+  const t={on:'☁️ Ao vivo',off:'📴 Sem conexão',local:'💾 Só neste aparelho',erro:'⚠️ Nuvem indisponível'}[e]||'';
+  $('#nuvem').textContent=t?'· '+t:'';
+}
+function aplicarRemoto(d){
+  S=d?normalizar(d):padrao();
+  if(d){try{localStorage.setItem(CHAVE,JSON.stringify(S))}catch(e){}}
+  montarSelects();render();
+}
+function iniciarNuvem(){
+  if(!nuvemAtiva()){estadoNuvem('local');return}
+  try{
+    if(!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG);
+    const db=firebase.database();
+    nuvem=db.ref(NUVEM_CAMINHO);
+    db.ref('.info/connected').on('value',s=>estadoNuvem(s.val()?'on':'off'));
+    let primeira=true;
+    nuvem.on('value',snap=>{
+      const d=snap.val();
+      if(d){
+        try{localStorage.setItem(MIGRADO,'1')}catch(e){}
+        aplicarRemoto(d);
+      }else if(primeira&&localStorage.getItem(CHAVE)&&!localStorage.getItem(MIGRADO)){
+        // nuvem vazia: envia os dados que já existiam neste aparelho (só na primeira vez)
+        try{localStorage.setItem(MIGRADO,'1')}catch(e){}
+        salvar();
+      }else{
+        aplicarRemoto(null);
+      }
+      primeira=false;
+    },()=>{estadoNuvem('erro');aviso('⚠️ Sem acesso à nuvem. Confira as regras do banco.')});
+  }catch(e){nuvem=null;estadoNuvem('erro')}
+}
+
+/* ---------- instalar como app ---------- */
+let adiado=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();adiado=e;$('#btnInstalar').classList.remove('hidden')});
+window.addEventListener('appinstalled',()=>$('#btnInstalar').classList.add('hidden'));
+$('#btnInstalar').onclick=async()=>{
+  if(!adiado)return;
+  adiado.prompt();
+  try{await adiado.userChoice}catch(e){}
+  adiado=null;$('#btnInstalar').classList.add('hidden');
 };
 
 /* ---------- início ---------- */
@@ -519,7 +589,7 @@ $('#btnZapAcordos').onclick=async()=>{
   mesAtual=`${new Date().getFullYear()}-${p2(new Date().getMonth()+1)}`;
   if(!MES_LISTA.includes(mesAtual))mesAtual=mesAtual<MES_LISTA[0]?MES_LISTA[0]:MES_LISTA[MES_LISTA.length-1];
   $('#mes').value=mesAtual;$('#hMes').value='todos';$('#pData').value=hojeISO();$('#cData').value=hojeISO();
-  abrirAba('geral');render();renderAcordos();
+  abrirAba('geral');render();iniciarNuvem();
   try{localStorage.removeItem('quintal:acessos')}catch(e){}
   tick();setInterval(tick,1000);
 })();
