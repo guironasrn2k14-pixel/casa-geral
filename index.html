@@ -1,599 +1,461 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Guironas — Atmospheric Minimalist RPG</title>
-  <!-- Google Fonts & Font Awesome Icons -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-  <style>
-    /* ==========================================================
-       RESET & BASE STYLES
-       ========================================================== */
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      user-select: none;
-    }
-
-    body, html {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      font-family: 'Rajdhani', sans-serif;
-      color: #e0f7fc;
-      background-color: #080a0f;
-    }
-
-    /* ==========================================================
-       1. ATMOSPHERIC DYNAMIC BACKGROUND (WEATHER OVERLAY)
-       ========================================================== */
-    #weather-bg {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background-size: cover;
-      background-position: center;
-      transition: background-image 1.5s ease-in-out, filter 1s ease;
-      z-index: 1;
-      filter: brightness(0.65) contrast(1.1);
-    }
-
-    /* Efeito realista de Chuva no Vidro / Gotas */
-    .rain-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 2;
-      background: radial-gradient(circle at 50% 50%, rgba(10, 15, 25, 0.2), rgba(5, 8, 15, 0.75));
-      opacity: 0;
-      transition: opacity 1s ease;
-    }
-
-    .rain-overlay.active {
-      opacity: 1;
-      /* Aplica um padrão procedural de gotas e desfocagem sutil no vidro */
-      backdrop-filter: blur(2px);
-    }
-
-    /* Canvas para partículas de chuva animadas */
-    #rain-canvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 3;
-    }
-
-    /* ==========================================================
-       2. TOP HUD (STATUS COMPACTO & NEON)
-       ========================================================== */
-    .top-hud {
-      position: fixed;
-      top: 15px;
-      left: 75px;
-      right: 20px;
-      z-index: 10;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 16px;
-      background: rgba(10, 16, 26, 0.45);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(0, 229, 255, 0.25);
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), inset 0 0 10px rgba(0, 229, 255, 0.05);
-    }
-
-    .profile-info {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .avatar {
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      border: 2px solid #00e5ff;
-      box-shadow: 0 0 8px rgba(0, 229, 255, 0.6);
-      background: #111;
-      object-fit: cover;
-    }
-
-    .player-details h1 {
-      font-family: 'Press Start 2P', monospace;
-      font-size: 11px;
-      color: #00e5ff;
-      text-shadow: 0 0 8px rgba(0, 229, 255, 0.8);
-      letter-spacing: 1px;
-    }
-
-    .player-details span {
-      font-size: 12px;
-      color: #a0c0d0;
-      font-weight: 600;
-    }
-
-    .vitals {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      width: 140px;
-    }
-
-    .bar-container {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 10px;
-      font-weight: bold;
-    }
-
-    .bar-bg {
-      flex: 1;
-      height: 5px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 3px;
-      overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, 0.05);
-    }
-
-    .bar-fill {
-      height: 100%;
-      border-radius: 3px;
-      transition: width 0.4s ease;
-    }
-
-    .hp-fill { background: #ff3366; box-shadow: 0 0 6px #ff3366; width: 85%; }
-    .en-fill { background: #00e5ff; box-shadow: 0 0 6px #00e5ff; width: 60%; }
-    .xp-fill { background: #ffcc00; box-shadow: 0 0 6px #ffcc00; width: 40%; }
-
-    .weather-widget {
-      text-align: right;
-      font-size: 13px;
-      font-weight: 600;
-      color: #e0f7fc;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.8);
-    }
-
-    .weather-widget .clock {
-      font-family: 'Press Start 2P', monospace;
-      font-size: 12px;
-      color: #00e5ff;
-      margin-bottom: 2px;
-    }
-
-    /* ==========================================================
-       3. RETRACTABLE SIDE DOCK (MENU LATERAL RECOLHÍVEL)
-       ========================================================== */
-    .side-dock {
-      position: fixed;
-      left: 15px;
-      top: 50%;
-      transform: translateY(-50%);
-      z-index: 100;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      padding: 16px 10px;
-      background: rgba(10, 16, 26, 0.35);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(0, 229, 255, 0.2);
-      border-radius: 30px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .dock-btn {
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      color: #a0c0d0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 15px;
-      cursor: pointer;
-      transition: all 0.25s ease;
-    }
-
-    .dock-btn:hover, .dock-btn.active {
-      color: #00e5ff;
-      background: rgba(0, 229, 255, 0.15);
-      border-color: #00e5ff;
-      box-shadow: 0 0 12px rgba(0, 229, 255, 0.5);
-      transform: scale(1.1);
-    }
-
-    /* ==========================================================
-       4. EXPANDABLE RPG MODULES (DAILY QUESTS & LOGS)
-       ========================================================== */
-    .bottom-modules {
-      position: fixed;
-      bottom: 20px;
-      left: 75px;
-      right: 20px;
-      z-index: 10;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 15px;
-      transition: transform 0.4s ease, opacity 0.4s ease;
-    }
-
-    .bottom-modules.hidden {
-      transform: translateY(120%);
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    .glass-card {
-      background: rgba(10, 16, 26, 0.45);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      border: 1px solid rgba(0, 229, 255, 0.2);
-      border-radius: 14px;
-      padding: 14px 18px;
-      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
-    }
-
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-      padding-bottom: 6px;
-      border-bottom: 1px solid rgba(0, 229, 255, 0.15);
-    }
-
-    .card-header h2 {
-      font-size: 13px;
-      font-family: 'Press Start 2P', monospace;
-      color: #00e5ff;
-      letter-spacing: 0.5px;
-    }
-
-    .quest-tabs {
-      display: flex;
-      gap: 6px;
-    }
-
-    .tab-btn {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      color: #a0c0d0;
-      padding: 2px 8px;
-      border-radius: 6px;
-      font-size: 11px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .tab-btn.active {
-      background: #00e5ff;
-      color: #080a0f;
-      border-color: #00e5ff;
-      box-shadow: 0 0 8px rgba(0, 229, 255, 0.6);
-    }
-
-    .quest-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .quest-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 14px;
-      font-weight: 600;
-    }
-
-    .quest-item input[type="checkbox"] {
-      appearance: none;
-      width: 16px;
-      height: 16px;
-      border: 1px solid #00e5ff;
-      border-radius: 4px;
-      background: rgba(0, 0, 0, 0.3);
-      cursor: pointer;
-      position: relative;
-    }
-
-    .quest-item input[type="checkbox"]:checked {
-      background: #00e5ff;
-      box-shadow: 0 0 8px #00e5ff;
-    }
-
-    .quest-item input[type="checkbox"]:checked::after {
-      content: '✓';
-      position: absolute;
-      color: #080a0f;
-      font-size: 11px;
-      font-weight: bold;
-      top: -1px;
-      left: 3px;
-    }
-
-    .log-input {
-      width: 100%;
-      background: rgba(0, 0, 0, 0.3);
-      border: 1px solid rgba(0, 229, 255, 0.2);
-      border-radius: 8px;
-      padding: 8px 12px;
-      color: #e0f7fc;
-      font-family: 'Rajdhani', sans-serif;
-      font-size: 13px;
-      margin-bottom: 6px;
-      outline: none;
-    }
-
-    .log-input:focus {
-      border-color: #00e5ff;
-      box-shadow: 0 0 8px rgba(0, 229, 255, 0.3);
-    }
-
-    /* Botão Flutuante Atributos */
-    .attributes-btn {
-      position: fixed;
-      bottom: 220px;
-      right: 25px;
-      z-index: 10;
-      background: rgba(10, 16, 26, 0.6);
-      border: 1px solid #00e5ff;
-      color: #00e5ff;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-family: 'Press Start 2P', monospace;
-      font-size: 9px;
-      cursor: pointer;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 0 12px rgba(0, 229, 255, 0.4);
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .attributes-btn:hover {
-      transform: scale(1.05);
-      background: #00e5ff;
-      color: #080a0f;
-      box-shadow: 0 0 20px rgba(0, 229, 255, 0.8);
-    }
-
-    /* Media Queries para Telas Pequenas/Mobile */
-    @media (max-width: 768px) {
-      .bottom-modules {
-        grid-template-columns: 1fr;
-        bottom: 15px;
-      }
-      .top-hud {
-        left: 65px;
-      }
-      .attributes-btn {
-        bottom: 340px;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gestão do Quintal</title>
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script>tailwind.config={darkMode:'class'}</script>
+<script>try{if(localStorage.getItem('quintal:tema')==='escuro')document.documentElement.classList.add('dark')}catch(e){}</script>
+<style>
+html{font-size:18px}
+body{-webkit-tap-highlight-color:transparent}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #f59e0b;outline-offset:2px}
+</style>
 </head>
-<body>
+<body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-50 min-h-screen pb-16">
 
-  <!-- 1. BACKGROUND ATMOSFÉRICO DINÂMICO -->
-  <div id="weather-bg"></div>
-  <div id="rain-overlay" class="rain-overlay"></div>
-  <canvas id="rain-canvas"></canvas>
-
-  <!-- 2. TOP HUD (SISTEMA & STATUS DE GUIRONAS) -->
-  <div class="top-hud">
-    <div class="profile-info">
-      <img src="icon-192.png" alt="Guironas Avatar" class="avatar" onerror="this.src='https://via.placeholder.com/38'">
-      <div class="player-details">
-        <h1>GUIRONAS</h1>
-        <span>LVL 1 · Aprendiz</span>
-      </div>
+<header class="bg-[#16305a] dark:bg-slate-900 text-white px-4 pt-3 pb-4 sticky top-0 z-20 shadow">
+  <div id="relogio" class="text-right text-sm opacity-90"></div>
+  <div class="flex items-center gap-3 mt-1">
+    <div class="text-3xl bg-white/10 rounded-xl w-12 h-12 flex items-center justify-center" aria-hidden="true">🏠</div>
+    <div class="flex-1 min-w-0">
+      <h1 class="text-xl font-bold leading-tight">Gestão do Quintal</h1>
+      <p class="text-sm opacity-90">Água &amp; Luz (5 Famílias)</p>
     </div>
+    <button id="btnTema" class="bg-white/15 hover:bg-white/25 rounded-full w-12 h-12 text-2xl" aria-label="Trocar entre tema claro e escuro">🌙</button>
+  </div>
+  <button id="btnZap" class="mt-3 w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-bold rounded-xl py-3 text-lg">📋 Copiar resumo para o Zap</button>
+</header>
 
-    <div class="vitals">
-      <div class="bar-container">
-        <span style="color:#ff3366;">HP</span>
-        <div class="bar-bg"><div class="bar-fill hp-fill"></div></div>
-      </div>
-      <div class="bar-container">
-        <span style="color:#00e5ff;">EN</span>
-        <div class="bar-bg"><div class="bar-fill en-fill"></div></div>
-      </div>
-      <div class="bar-container">
-        <span style="color:#ffcc00;">XP</span>
-        <div class="bar-bg"><div class="bar-fill xp-fill"></div></div>
-      </div>
+<main class="max-w-3xl mx-auto px-4 pt-4">
+
+  <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3 flex items-center gap-3">
+    <label for="mes" class="font-semibold">📅 Mês:</label>
+    <select id="mes" class="flex-1 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-lg"></select>
+  </div>
+
+  <p class="mt-3 bg-sky-100 dark:bg-sky-950 text-sky-900 dark:text-sky-100 rounded-xl p-3">💡 Olá! Veja aqui quem já pagou e o que falta pagar este mês.</p>
+
+  <div class="grid grid-cols-2 gap-3 mt-3">
+    <div class="rounded-xl border-2 border-green-600 bg-white dark:bg-slate-900 p-3">
+      <div class="text-sm">Total arrecadado</div>
+      <div id="totPago" class="text-2xl font-extrabold text-green-700 dark:text-green-400"></div>
+      <div id="qtdPago" class="text-sm"></div>
     </div>
-
-    <div class="weather-widget">
-      <div class="clock" id="clock">18:54</div>
-      <div id="weather-text">São Paulo · 23° 🌧️ 45%</div>
+    <div class="rounded-xl border-2 border-red-600 bg-white dark:bg-slate-900 p-3">
+      <div class="text-sm">Falta pagar</div>
+      <div id="totPend" class="text-2xl font-extrabold text-red-700 dark:text-red-400"></div>
+      <div id="qtdPend" class="text-sm"></div>
     </div>
   </div>
 
-  <!-- 3. DOCK LATERAL RECOLHÍVEL (REF: FOTO 2) -->
-  <nav class="side-dock">
-    <button class="dock-btn active" title="Início"><i class="fa-solid fa-house"></i></button>
-    <button class="dock-btn" title="Missões"><i class="fa-solid fa-scroll"></i></button>
-    <button class="dock-btn" title="Treino"><i class="fa-solid fa-dumbbell"></i></button>
-    <button class="dock-btn" title="Atributos" id="toggle-modules-btn"><i class="fa-solid fa-chart-pie"></i></button>
-    <button class="dock-btn" title="Logs / Notas"><i class="fa-solid fa-pen-to-square"></i></button>
-    <button class="dock-btn" title="Configurações"><i class="fa-solid fa-gear"></i></button>
+  <nav class="mt-4 flex border-b-2 border-slate-200 dark:border-slate-700 overflow-x-auto" role="tablist">
+    <button data-aba="geral" class="aba px-4 py-3 font-semibold whitespace-nowrap">📊 Visão Geral</button>
+    <button data-aba="hist" class="aba px-4 py-3 font-semibold whitespace-nowrap">🧾 Histórico</button>
+    <button data-aba="admin" class="aba px-4 py-3 font-semibold whitespace-nowrap">✏️ Lançar / Administrar</button>
+    <button data-aba="outros" class="aba px-4 py-3 font-semibold whitespace-nowrap">🏦 Outros</button>
   </nav>
 
-  <!-- BOTÃO FLUTUANTE DE ATRIBUTOS -->
-  <button class="attributes-btn" id="attr-btn">
-    <i class="fa-solid fa-wifi"></i> Atributos
-  </button>
+  <!-- VISÃO GERAL -->
+  <section id="aba-geral" class="mt-4">
+    <h2 id="tituloGeral" class="text-xl font-bold mb-3"></h2>
+    <div id="cards" class="space-y-3"></div>
+  </section>
 
-  <!-- 4. PAINÉIS TRANSLÚCIDOS (DAILY QUESTS & LOGS) -->
-  <div class="bottom-modules" id="bottom-modules">
-    <!-- Bloco Daily Quests -->
-    <div class="glass-card">
-      <div class="card-header">
-        <h2>DAILY QUESTS</h2>
-        <div class="quest-tabs">
-          <button class="tab-btn active">A</button>
-          <button class="tab-btn">B</button>
-          <button class="tab-btn">C</button>
-          <button class="tab-btn">D</button>
-        </div>
-      </div>
-      <ul class="quest-list">
-        <li class="quest-item">
-          <input type="checkbox" id="q1" checked>
-          <label for="q1">Supino reto</label>
-        </li>
-        <li class="quest-item">
-          <input type="checkbox" id="q2">
-          <label for="q2">Crucifixo</label>
-        </li>
-        <li class="quest-item">
-          <input type="checkbox" id="q3">
-          <label for="q3">Tríceps na polia</label>
-        </li>
-      </ul>
+  <!-- HISTÓRICO -->
+  <section id="aba-hist" class="mt-4 hidden">
+    <h2 class="text-xl font-bold mb-3">Histórico de pagamentos</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
+      <input id="hBusca" type="search" placeholder="🔍 Buscar família" class="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2">
+      <select id="hMes" class="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2"></select>
+      <select id="hStatus" class="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2">
+        <option value="pago">🟢 Só pagos</option>
+        <option value="pend">🔴 Só pendentes</option>
+        <option value="todos">Todos</option>
+      </select>
     </div>
-
-    <!-- Bloco Logs & Notas -->
-    <div class="glass-card">
-      <div class="card-header">
-        <h2>LOGS & NOTAS 📜</h2>
-        <i class="fa-solid fa-lightbulb" style="color:#ffcc00; cursor:pointer;" title="Sincronizar Google Keep"></i>
-      </div>
-      <input type="text" class="log-input" placeholder="Digitar: texto rápido..." id="note1">
-      <input type="text" class="log-input" placeholder="Digitar: lista de compras..." id="note2">
+    <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
+      <table class="w-full text-left bg-white dark:bg-slate-900">
+        <thead class="bg-slate-100 dark:bg-slate-800 text-sm">
+          <tr><th class="p-3">Família</th><th class="p-3">Conta</th><th class="p-3">Mês</th><th class="p-3">Valor</th><th class="p-3">Situação</th></tr>
+        </thead>
+        <tbody id="hLinhas"></tbody>
+      </table>
     </div>
-  </div>
+  </section>
 
-  <!-- ==========================================================
-       5. LÓGICA JAVASCRIPT & CLIMA DINÂMICO
-       ========================================================== -->
-  <script>
-    // RELÓGIO EM TEMPO REAL
-    function updateClock() {
-      const now = new Date();
-      const hours = String(now.getHours()).padStart(2, '0');
-      const minutes = String(now.getMinutes()).padStart(2, '0');
-      document.getElementById('clock').textContent = `${hours}:${minutes}`;
-    }
-    setInterval(updateClock, 1000);
-    updateClock();
+  <!-- ADMIN -->
+  <section id="aba-admin" class="mt-4 hidden space-y-5">
+    <form id="fPagar" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-3">
+      <h2 class="text-xl font-bold">💵 Dar baixa em pagamento</h2>
+      <p id="fPagarMes" class="text-sm opacity-80"></p>
+      <label class="block">Família
+        <select id="pFam" class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-3 py-2"></select>
+      </label>
+      <label class="block">Conta
+        <select id="pConta" class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-3 py-2">
+          <option value="agua">💧 Água</option>
+          <option value="luz">⚡ Luz</option>
+        </select>
+      </label>
+      <label class="block">Data do pagamento
+        <input id="pData" type="date" class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-3 py-2">
+      </label>
+      <div class="grid grid-cols-2 gap-3">
+        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl py-3">🟢 Marcar como pago</button>
+        <button type="button" id="btnDesfazer" class="bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl py-3">🔴 Desfazer</button>
+      </div>
+    </form>
 
-    // INTERFACE RECOLHÍVEL (OCULTAR / EXIBIR MÓDULOS)
-    const modules = document.getElementById('bottom-modules');
-    const toggleBtn = document.getElementById('toggle-modules-btn');
-    const attrBtn = document.getElementById('attr-btn');
+    <form id="fValores" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-3">
+      <h2 class="text-xl font-bold">⚙️ Valores por família</h2>
+      <label class="block">💧 Água (R$)
+        <input id="vAgua" type="number" step="0.01" min="0" class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-3 py-2">
+      </label>
+      <label class="block">⚡ Luz (R$)
+        <input id="vLuz" type="number" step="0.01" min="0" class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-3 py-2">
+      </label>
+      <p class="text-sm opacity-80">Pagamentos já feitos mantêm o valor que foi pago na época.</p>
+      <button class="w-full bg-[#16305a] hover:bg-[#1d3f75] text-white font-bold rounded-xl py-3">Salvar valores</button>
+    </form>
 
-    function toggleInterface() {
-      modules.classList.toggle('hidden');
-    }
+    <form id="fNomes" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-3">
+      <h2 class="text-xl font-bold">🏘️ Nomes das famílias</h2>
+      <div id="nomesCampos" class="space-y-2"></div>
+      <button class="w-full bg-[#16305a] hover:bg-[#1d3f75] text-white font-bold rounded-xl py-3">Salvar nomes</button>
+    </form>
 
-    toggleBtn.addEventListener('click', toggleInterface);
-    attrBtn.addEventListener('click', toggleInterface);
+    <button id="btnLimpar" class="w-full border-2 border-red-600 text-red-700 dark:text-red-400 font-semibold rounded-xl py-3">Apagar todos os dados deste aparelho</button>
+  </section>
+  <!-- OUTROS -->
+  <section id="aba-outros" class="mt-4 hidden space-y-5">
+    <div>
+      <h2 class="text-xl font-bold">🏦 Caixinha do quintal</h2>
+      <p class="opacity-80">Dinheiro juntado para gastos extras: reforma, portão, festa… Aqui não importa o mês escolhido lá em cima.</p>
+    </div>
+    <div id="fundoResumo"></div>
+    <div id="fundoCards" class="space-y-3"></div>
 
-    // SISTEMA DE GEOLOCALIZAÇÃO E CLIMA (OPEN-METEO)
-    async function fetchWeather(lat, lon) {
-      try {
-        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&hourly=precipitation_probability`);
-        const data = await res.json();
-        
-        const temp = Math.round(data.current_weather.temperature);
-        const code = data.current_weather.weathercode;
-        const isRain = code >= 50; // Códigos de chuva na Open-Meteo
+    <form id="fContrib" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-3">
+      <h2 class="text-xl font-bold">💵 Registrar contribuição</h2>
+      <label class="block">Caixinha
+        <select id="cFundo" class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-3 py-2"></select>
+      </label>
+      <label class="block">Família
+        <select id="cFam" class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-3 py-2"></select>
+      </label>
+      <label class="block">Valor (R$)
+        <input id="cValor" type="number" step="0.01" min="0" class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-3 py-2">
+      </label>
+      <label class="block">Data
+        <input id="cData" type="date" class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-3 py-2">
+      </label>
+      <div class="grid grid-cols-2 gap-3">
+        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl py-3">🟢 Marcar como pago</button>
+        <button type="button" id="btnDesfazerC" class="bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl py-3">🔴 Desfazer</button>
+      </div>
+    </form>
 
-        document.getElementById('weather-text').textContent = `Local · ${temp}°C ${isRain ? '🌧️ 80%' : '☀️ 10%'}`;
-        applyAtmosphere(isRain, temp);
-      } catch (e) {
-        // Fallback padrão se houver erro
-        applyAtmosphere(true, 23);
-      }
-    }
+    <form id="fNovoFundo" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-3">
+      <h2 class="text-xl font-bold">➕ Nova caixinha</h2>
+      <label class="block">Para que é o dinheiro?
+        <input id="nfNome" required maxlength="40" placeholder="Ex.: Reforma do portão" class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-3 py-2">
+      </label>
+      <label class="block">Meta, valor total estimado (R$)
+        <input id="nfMeta" type="number" step="0.01" min="1" required class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-3 py-2">
+      </label>
+      <label class="block">Valor sugerido por família (R$)
+        <input id="nfSug" type="number" step="0.01" min="0" class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-3 py-2">
+      </label>
+      <p class="text-sm opacity-80">Se deixar o valor sugerido em branco, a meta é dividida igualmente entre as famílias.</p>
+      <button class="w-full bg-[#16305a] hover:bg-[#1d3f75] text-white font-bold rounded-xl py-3">Criar caixinha</button>
+    </form>
+  </section>
+</main>
 
-    function applyAtmosphere(isRain, temp) {
-      const bg = document.getElementById('weather-bg');
-      const rainOverlay = document.getElementById('rain-overlay');
+<div id="aviso" class="fixed left-1/2 -translate-x-1/2 bottom-16 bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-4 py-3 rounded-xl shadow-lg hidden z-30"></div>
 
-      if (isRain) {
-        // Imagem de fundo estilo chuva no vidro (Foto 1)
-        bg.style.backgroundImage = "url('https://images.unsplash.com/photo-1519692933481-e162a57d6721?q=80&w=1920&auto=format&fit=crop')";
-        rainOverlay.classList.add('active');
-        startRainAnimation();
-      } else {
-        // Fundo ensolarado / limpo
-        bg.style.backgroundImage = "url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1920&auto=format&fit=crop')";
-        rainOverlay.classList.remove('active');
-      }
-    }
+<footer class="fixed bottom-0 inset-x-0 bg-white/95 dark:bg-slate-900/95 border-t border-slate-200 dark:border-slate-700 text-center text-sm py-2 z-20">
+  <span id="acesso">👁️ Acessado em: …</span> <span class="opacity-70">| Monitorado</span>
+</footer>
 
-    // ANIMAÇÃO DE GOTAS DE CHUVA NO CANVAS
-    function startRainAnimation() {
-      const canvas = document.getElementById('rain-canvas');
-      const ctx = canvas.getContext('2d');
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+<script>
+const CHAVE='quintal:v1', CHAVE_LOG='quintal:acessos';
+const CONTAS=[{k:'agua',ic:'💧',nome:'Água'},{k:'luz',ic:'⚡',nome:'Luz'}];
+const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const $=s=>document.querySelector(s);
+const brl=n=>n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const p2=n=>String(n).padStart(2,'0');
 
-      const drops = Array.from({ length: 70 }, () => ({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        length: Math.random() * 20 + 10,
-        speed: Math.random() * 8 + 4,
-        opacity: Math.random() * 0.4 + 0.1
-      }));
+const padrao=()=>({valores:{agua:50,luz:80},familias:[1,2,3,4,5].map(n=>({nome:'Família '+n,casa:'Casa '+n})),pagos:{},fundos:[]});
+function carregar(){try{const d=JSON.parse(localStorage.getItem(CHAVE));if(d&&d.familias&&d.valores&&d.pagos){d.fundos=d.fundos||[];return d}}catch(e){}return padrao()}
+function salvar(){try{localStorage.setItem(CHAVE,JSON.stringify(S))}catch(e){aviso('⚠️ Não consegui salvar neste aparelho.')}}
+let S=carregar(), mesAtual='';
 
-      function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.strokeStyle = 'rgba(180, 220, 255, 0.4)';
-        ctx.lineWidth = 1;
+/* ---------- datas ---------- */
+const hojeISO=()=>{const d=new Date();return `${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`};
+const dataBR=iso=>{const [a,m,d]=iso.split('-');return `${d}/${m}/${a}`};
+const dm=iso=>{const [,m,d]=iso.split('-');return `${d}/${m}`};
+const nomeMes=ym=>{const [a,m]=ym.split('-');return `${MESES[+m-1]} / ${a}`};
+function listaMeses(){
+  const out=[];
+  for(let a=2026;a<=2027;a++)for(let m=1;m<=12;m++){if(a===2026&&m<6)continue;out.push(`${a}-${p2(m)}`)}
+  return out;
+}
+const MES_LISTA=listaMeses();
 
-        drops.forEach(drop => {
-          ctx.beginPath();
-          ctx.moveTo(drop.x, drop.y);
-          ctx.lineTo(drop.x, drop.y + drop.length);
-          ctx.stroke();
+/* ---------- acesso (relógio + registro) ---------- */
+function agoraTexto(){const d=new Date();return `${p2(d.getDate())}/${p2(d.getMonth()+1)}/${d.getFullYear()} às ${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`}
+function registrarAcesso(){
+  const reg={quando:new Date().toISOString(),texto:agoraTexto(),aparelho:navigator.userAgent};
+  try{const l=JSON.parse(localStorage.getItem(CHAVE_LOG)||'[]');l.push(reg);localStorage.setItem(CHAVE_LOG,JSON.stringify(l.slice(-200)))}catch(e){}
+  // Ponto de ligação com o seu app de monitoramento: defina window.onAcessoRegistrado = function(reg){...}
+  if(typeof window.onAcessoRegistrado==='function'){try{window.onAcessoRegistrado(reg)}catch(e){}}
+  $('#acesso').textContent='👁️ Acessado em: '+reg.texto;
+}
+function tick(){const d=new Date();const dias=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];$('#relogio').textContent=`${dias[d.getDay()]}, ${agoraTexto().replace(' às ',' - ')}`}
 
-          drop.y += drop.speed;
-          if (drop.y > canvas.height) {
-            drop.y = -drop.length;
-            drop.x = Math.random() * canvas.width;
-          }
-        });
-        requestAnimationFrame(draw);
-      }
-      draw();
-    }
+/* ---------- dados ---------- */
+const chave=(mes,i,k)=>`${mes}|${i}|${k}`;
+function itens(mes){
+  const r=[];
+  S.familias.forEach((f,i)=>CONTAS.forEach(c=>{
+    const pg=S.pagos[chave(mes,i,c.k)];
+    r.push({i,fam:f,conta:c,mes,pago:!!pg,data:pg?pg.data:null,valor:pg?pg.valor:S.valores[c.k]});
+  }));
+  return r;
+}
 
-    // OBTER LOCALIZAÇÃO DO NAVEGADOR
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        pos => fetchWeather(pos.coords.latitude, pos.coords.longitude),
-        () => fetchWeather(-23.5505, -46.6333) // Padrão São Paulo se não aceitar
-      );
-    } else {
-      fetchWeather(-23.5505, -46.6333);
-    }
-  </script>
+/* ---------- render ---------- */
+function render(){
+  const it=itens(mesAtual),pagos=it.filter(x=>x.pago),pend=it.filter(x=>!x.pago);
+  const soma=a=>a.reduce((t,x)=>t+x.valor,0);
+  $('#totPago').textContent=brl(soma(pagos));
+  $('#totPend').textContent=brl(soma(pend));
+  $('#qtdPago').textContent=`${pagos.length} de ${it.length} quitadas`;
+  $('#qtdPend').textContent=`${pend.length} de ${it.length} pendentes`;
+  $('#tituloGeral').textContent=`Situação das ${S.familias.length} Famílias`;
+  $('#cards').innerHTML=S.familias.map((f,i)=>`
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4">
+      <div class="text-xl font-bold">${esc(f.nome)} <span class="font-normal text-base opacity-80">(${esc(f.casa)})</span></div>
+      <div class="mt-2 space-y-2">
+        ${it.filter(x=>x.i===i).map(x=>`
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="${x.conta.k==='agua'?'bg-sky-100 text-sky-900 dark:bg-sky-900 dark:text-sky-50':'bg-amber-100 text-amber-900 dark:bg-amber-900 dark:text-amber-50'} rounded-full px-3 py-1 font-semibold">${x.conta.ic} ${x.conta.nome}: ${brl(x.valor)}</span>
+            ${x.pago
+              ?`<span class="bg-green-100 text-green-900 dark:bg-green-900 dark:text-green-50 rounded-full px-3 py-1 font-semibold">🟢 PAGO em ${dm(x.data)}</span>`
+              :`<span class="bg-red-100 text-red-900 dark:bg-red-900 dark:text-red-50 rounded-full px-3 py-1 font-semibold">🔴 PENDENTE</span>`}
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+  renderHist();renderFundos();
+  $('#fPagarMes').textContent='Mês selecionado: '+nomeMes(mesAtual);
+}
+function renderHist(){
+  const busca=$('#hBusca').value.trim().toLowerCase(), mes=$('#hMes').value, st=$('#hStatus').value;
+  const meses=mes==='todos'?MES_LISTA:[mes];
+  let r=meses.flatMap(m=>itens(m)).filter(x=>x.fam.nome.toLowerCase().includes(busca));
+  if(st==='pago')r=r.filter(x=>x.pago);
+  if(st==='pend')r=r.filter(x=>!x.pago);
+  r.sort((a,b)=>(b.data||'').localeCompare(a.data||'')||b.mes.localeCompare(a.mes)||a.i-b.i);
+  $('#hLinhas').innerHTML=r.length?r.map(x=>`
+    <tr class="border-t border-slate-200 dark:border-slate-700">
+      <td class="p-3 font-semibold">${esc(x.fam.nome)}</td>
+      <td class="p-3 whitespace-nowrap">${x.conta.ic} ${x.conta.nome}</td>
+      <td class="p-3 whitespace-nowrap">${nomeMes(x.mes)}</td>
+      <td class="p-3 whitespace-nowrap">${brl(x.valor)}</td>
+      <td class="p-3 whitespace-nowrap">${x.pago?'🟢 Pago em '+dataBR(x.data):'🔴 Pendente'}</td>
+    </tr>`).join('')
+    :`<tr><td colspan="5" class="p-4 text-center opacity-80">Nenhum registro encontrado. Mude os filtros acima.</td></tr>`;
+}
+function montarSelects(){
+  const opMes=MES_LISTA.map(m=>`<option value="${m}">${nomeMes(m)}</option>`).join('');
+  $('#mes').innerHTML=opMes;
+  $('#hMes').innerHTML='<option value="todos">Todos os meses</option>'+opMes;
+  $('#pFam').innerHTML=S.familias.map((f,i)=>`<option value="${i}">${esc(f.nome)} (${esc(f.casa)})</option>`).join('');
+  $('#nomesCampos').innerHTML=S.familias.map((f,i)=>`
+    <div class="grid grid-cols-2 gap-2">
+      <input data-nome="${i}" value="${esc(f.nome)}" aria-label="Nome da família ${i+1}" class="rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-3 py-2">
+      <input data-casa="${i}" value="${esc(f.casa)}" aria-label="Casa da família ${i+1}" class="rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-3 py-2">
+    </div>`).join('');
+  $('#vAgua').value=S.valores.agua;$('#vLuz').value=S.valores.luz;
+}
+
+/* ---------- caixinha (Outros) ---------- */
+const totFundo=f=>Object.values(f.contribs).reduce((t,c)=>t+c.valor,0);
+const sugerido=f=>f.sugerido>0?f.sugerido:f.meta/S.familias.length;
+function renderFundos(){
+  const F=S.fundos;
+  const tot=F.reduce((t,f)=>t+totFundo(f),0);
+  const falta=F.reduce((t,f)=>t+Math.max(0,f.meta-totFundo(f)),0);
+  const meta=F.reduce((t,f)=>t+f.meta,0);
+  $('#fundoResumo').innerHTML=F.length?`
+    <div class="grid grid-cols-2 gap-3">
+      <div class="rounded-xl border-2 border-green-600 bg-white dark:bg-slate-900 p-3">
+        <div class="text-sm">Total na caixinha</div>
+        <div class="text-2xl font-extrabold text-green-700 dark:text-green-400">${brl(tot)}</div>
+        <div class="text-sm">${F.length} caixinha(s)</div>
+      </div>
+      <div class="rounded-xl border-2 border-red-600 bg-white dark:bg-slate-900 p-3">
+        <div class="text-sm">Falta para a meta</div>
+        <div class="text-2xl font-extrabold text-red-700 dark:text-red-400">${brl(falta)}</div>
+        <div class="text-sm">Meta total: ${brl(meta)}</div>
+      </div>
+    </div>`:'';
+  $('#fundoCards').innerHTML=F.length?F.map(f=>{
+    const t=totFundo(f),pct=f.meta>0?Math.min(100,Math.round(t/f.meta*100)):0,fl=Math.max(0,f.meta-t),sug=sugerido(f);
+    return `<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4">
+      <div class="flex items-start justify-between gap-2">
+        <div class="text-xl font-bold">${esc(f.nome)}</div>
+        <button data-delfundo="${f.id}" class="text-sm text-red-700 dark:text-red-400 underline shrink-0" aria-label="Apagar caixinha ${esc(f.nome)}">🗑️ Apagar</button>
+      </div>
+      <div class="mt-2">Arrecadado: <b class="text-green-700 dark:text-green-400">${brl(t)}</b> de ${brl(f.meta)}</div>
+      <div class="mt-2 h-5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><div class="h-full bg-green-600" style="width:${pct}%"></div></div>
+      <div class="text-sm mt-1">${pct}% da meta — ${fl>0?'faltam '+brl(fl):'meta alcançada! 🎉'}</div>
+      <div class="mt-3 space-y-2">${S.familias.map((fa,i)=>{const c=f.contribs[i];return `
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="font-semibold">${esc(fa.nome)}</span>
+          ${c?`<span class="bg-green-100 text-green-900 dark:bg-green-900 dark:text-green-50 rounded-full px-3 py-1 font-semibold">🟢 PAGO ${brl(c.valor)} em ${dm(c.data)}</span>`
+             :`<span class="bg-red-100 text-red-900 dark:bg-red-900 dark:text-red-50 rounded-full px-3 py-1 font-semibold">🔴 PENDENTE (sugerido ${brl(sug)})</span>`}
+        </div>`}).join('')}</div>
+    </div>`}).join('')
+    :`<p class="rounded-xl bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-600 p-4">Nenhuma caixinha criada ainda. Use o formulário “Nova caixinha” aqui embaixo para criar a primeira.</p>`;
+  const sel=$('#cFundo'),v=sel.value;
+  sel.innerHTML=F.map(f=>`<option value="${f.id}">${esc(f.nome)}</option>`).join('')||'<option value="">Crie uma caixinha primeiro</option>';
+  if(F.some(f=>f.id===v))sel.value=v;
+  const sf=$('#cFam'),vf=sf.value;
+  sf.innerHTML=S.familias.map((f,i)=>`<option value="${i}">${esc(f.nome)} (${esc(f.casa)})</option>`).join('');
+  if(vf)sf.value=vf;
+  if(!$('#cValor').value)preencherValor();
+}
+function preencherValor(){const f=S.fundos.find(x=>x.id===$('#cFundo').value);$('#cValor').value=f?sugerido(f).toFixed(2):''}
+
+/* ---------- avisos ---------- */
+let tAviso;
+function aviso(t){const a=$('#aviso');a.textContent=t;a.classList.remove('hidden');clearTimeout(tAviso);tAviso=setTimeout(()=>a.classList.add('hidden'),2800)}
+
+/* ---------- abas ---------- */
+function abrirAba(nome){
+  ['geral','hist','admin','outros'].forEach(n=>$('#aba-'+n).classList.toggle('hidden',n!==nome));
+  document.querySelectorAll('.aba').forEach(b=>{
+    const on=b.dataset.aba===nome;
+    b.classList.toggle('border-b-4',on);b.classList.toggle('border-[#16305a]',on);
+    b.classList.toggle('dark:border-sky-400',on);b.classList.toggle('text-[#16305a]',on);
+    b.classList.toggle('dark:text-sky-300',on);b.setAttribute('aria-selected',on);
+  });
+}
+
+/* ---------- tema ---------- */
+function aplicarTema(escuro){
+  document.documentElement.classList.toggle('dark',escuro);
+  $('#btnTema').textContent=escuro?'☀️':'🌙';
+  try{localStorage.setItem('quintal:tema',escuro?'escuro':'claro')}catch(e){}
+}
+
+/* ---------- resumo WhatsApp ---------- */
+function textoZap(){
+  const it=itens(mesAtual),pg=it.filter(x=>x.pago),pd=it.filter(x=>!x.pago);
+  const soma=a=>brl(a.reduce((t,x)=>t+x.valor,0));
+  let t=`*🏠 Gestão do Quintal — ${nomeMes(mesAtual)}*\n\n🟢 Arrecadado: ${soma(pg)} (${pg.length} de ${it.length})\n🔴 Falta pagar: ${soma(pd)} (${pd.length} de ${it.length})\n`;
+  S.familias.forEach((f,i)=>{
+    t+=`\n*${f.nome}* (${f.casa})\n`;
+    it.filter(x=>x.i===i).forEach(x=>{t+=`${x.conta.ic} ${x.conta.nome} ${brl(x.valor)} — ${x.pago?'🟢 Pago em '+dm(x.data):'🔴 Pendente'}\n`});
+  });
+  if(S.fundos.length){
+    t+='\n\n*🏦 Caixinha do quintal*\n';
+    S.fundos.forEach(f=>{
+      t+=`\n*${f.nome}* — ${brl(totFundo(f))} de ${brl(f.meta)}\n`;
+      S.familias.forEach((fa,i)=>{const c=f.contribs[i];t+=`${fa.nome}: ${c?'🟢 '+brl(c.valor)+' em '+dm(c.data):'🔴 Pendente'}\n`});
+    });
+  }
+  return t.trim();
+}
+async function copiar(txt){
+  try{await navigator.clipboard.writeText(txt);return true}catch(e){
+    const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();
+    let ok=false;try{ok=document.execCommand('copy')}catch(e2){}ta.remove();return ok;
+  }
+}
+
+/* ---------- eventos ---------- */
+$('#btnTema').onclick=()=>aplicarTema(!document.documentElement.classList.contains('dark'));
+$('#btnZap').onclick=async()=>aviso(await copiar(textoZap())?'✅ Resumo copiado! Cole no WhatsApp.':'⚠️ Não deu para copiar. Tente de novo.');
+$('#mes').onchange=e=>{mesAtual=e.target.value;render()};
+document.querySelectorAll('.aba').forEach(b=>b.onclick=()=>abrirAba(b.dataset.aba));
+['hBusca','hMes','hStatus'].forEach(id=>$('#'+id).addEventListener('input',renderHist));
+
+$('#fPagar').onsubmit=e=>{
+  e.preventDefault();
+  const i=+$('#pFam').value,k=$('#pConta').value,data=$('#pData').value||hojeISO();
+  S.pagos[chave(mesAtual,i,k)]={data,valor:S.valores[k]};
+  salvar();render();aviso('✅ Pagamento registrado!');
+};
+$('#btnDesfazer').onclick=()=>{
+  const i=+$('#pFam').value,k=$('#pConta').value,c=chave(mesAtual,i,k);
+  if(!S.pagos[c])return aviso('Esta conta já está pendente.');
+  delete S.pagos[c];salvar();render();aviso('↩️ Pagamento desfeito.');
+};
+$('#fValores').onsubmit=e=>{
+  e.preventDefault();
+  const a=parseFloat($('#vAgua').value),l=parseFloat($('#vLuz').value);
+  if(isNaN(a)||isNaN(l)||a<0||l<0)return aviso('⚠️ Digite valores válidos.');
+  S.valores={agua:a,luz:l};salvar();render();aviso('✅ Valores salvos!');
+};
+$('#fNomes').onsubmit=e=>{
+  e.preventDefault();
+  S.familias=S.familias.map((f,i)=>({
+    nome:document.querySelector(`[data-nome="${i}"]`).value.trim()||f.nome,
+    casa:document.querySelector(`[data-casa="${i}"]`).value.trim()||f.casa
+  }));
+  salvar();montarSelects();render();aviso('✅ Nomes salvos!');
+};
+$('#btnLimpar').onclick=()=>{
+  if(confirm('Tem certeza? Isso apaga TODOS os pagamentos e valores salvos neste aparelho.')){
+    S=padrao();salvar();montarSelects();$('#mes').value=mesAtual;render();aviso('Dados apagados.');
+  }
+};
+
+$('#fNovoFundo').onsubmit=e=>{
+  e.preventDefault();
+  const nome=$('#nfNome').value.trim(),meta=parseFloat($('#nfMeta').value),sug=parseFloat($('#nfSug').value)||0;
+  if(!nome||isNaN(meta)||meta<=0)return aviso('⚠️ Preencha o nome e a meta.');
+  S.fundos.push({id:Date.now().toString(36),nome,meta,sugerido:sug,contribs:{}});
+  salvar();e.target.reset();$('#cValor').value='';render();aviso('✅ Caixinha criada!');
+};
+$('#cFundo').onchange=preencherValor;
+$('#fContrib').onsubmit=e=>{
+  e.preventDefault();
+  const f=S.fundos.find(x=>x.id===$('#cFundo').value),valor=parseFloat($('#cValor').value);
+  if(!f)return aviso('⚠️ Crie uma caixinha primeiro.');
+  if(isNaN(valor)||valor<=0)return aviso('⚠️ Digite um valor válido.');
+  f.contribs[$('#cFam').value]={valor,data:$('#cData').value||hojeISO()};
+  salvar();render();aviso('✅ Contribuição registrada!');
+};
+$('#btnDesfazerC').onclick=()=>{
+  const f=S.fundos.find(x=>x.id===$('#cFundo').value),i=$('#cFam').value;
+  if(!f||!f.contribs[i])return aviso('Esta família ainda não contribuiu.');
+  delete f.contribs[i];salvar();render();aviso('↩️ Contribuição desfeita.');
+};
+$('#fundoCards').onclick=e=>{
+  const b=e.target.closest('[data-delfundo]');if(!b)return;
+  const f=S.fundos.find(x=>x.id===b.dataset.delfundo);
+  if(f&&confirm(`Apagar a caixinha “${f.nome}” e tudo o que foi registrado nela?`)){
+    S.fundos=S.fundos.filter(x=>x.id!==f.id);salvar();$('#cValor').value='';render();aviso('Caixinha apagada.');
+  }
+};
+
+/* ---------- início ---------- */
+(function iniciar(){
+  aplicarTema(document.documentElement.classList.contains('dark'));
+  montarSelects();
+  mesAtual=`${new Date().getFullYear()}-${p2(new Date().getMonth()+1)}`;
+  if(!MES_LISTA.includes(mesAtual))mesAtual=mesAtual<MES_LISTA[0]?MES_LISTA[0]:MES_LISTA[MES_LISTA.length-1];
+  $('#mes').value=mesAtual;$('#hMes').value='todos';$('#pData').value=hojeISO();$('#cData').value=hojeISO();
+  abrirAba('geral');render();
+  registrarAcesso();tick();setInterval(tick,1000);
+})();
+</script>
 </body>
 </html>
