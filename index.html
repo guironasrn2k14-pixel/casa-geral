@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Gestão do Quintal</title>
+<title>Jambalaya</title>
 <script src="https://cdn.tailwindcss.com/3.4.17"></script>
 <script>tailwind.config={darkMode:'class'}</script>
 <script>try{if(localStorage.getItem('quintal:tema')==='escuro')document.documentElement.classList.add('dark')}catch(e){}</script>
@@ -13,14 +13,14 @@ body{-webkit-tap-highlight-color:transparent}
 button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #f59e0b;outline-offset:2px}
 </style>
 </head>
-<body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-50 min-h-screen pb-16">
+<body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-50 min-h-screen pb-8">
 
 <header class="bg-[#16305a] dark:bg-slate-900 text-white px-4 pt-3 pb-4 sticky top-0 z-20 shadow">
   <div id="relogio" class="text-right text-sm opacity-90"></div>
   <div class="flex items-center gap-3 mt-1">
     <div class="text-3xl bg-white/10 rounded-xl w-12 h-12 flex items-center justify-center" aria-hidden="true">🏠</div>
     <div class="flex-1 min-w-0">
-      <h1 class="text-xl font-bold leading-tight">Gestão do Quintal</h1>
+      <h1 class="text-xl font-bold leading-tight">Jambalaya</h1>
       <p class="text-sm opacity-90">Água &amp; Luz (5 Famílias)</p>
     </div>
     <button id="btnTema" class="bg-white/15 hover:bg-white/25 rounded-full w-12 h-12 text-2xl" aria-label="Trocar entre tema claro e escuro">🌙</button>
@@ -54,11 +54,17 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
     <button data-aba="geral" class="aba px-4 py-3 font-semibold whitespace-nowrap">📊 Visão Geral</button>
     <button data-aba="hist" class="aba px-4 py-3 font-semibold whitespace-nowrap">🧾 Histórico</button>
     <button data-aba="admin" class="aba px-4 py-3 font-semibold whitespace-nowrap">✏️ Lançar / Administrar</button>
-    <button data-aba="outros" class="aba px-4 py-3 font-semibold whitespace-nowrap">🏦 Outros</button>
+    <button data-aba="outros" class="aba px-4 py-3 font-semibold whitespace-nowrap">🏦 Caixinha do Quintal</button>
+    <button data-aba="convivencia" class="aba px-4 py-3 font-semibold whitespace-nowrap">🤝 Boa Convivência</button>
   </nav>
 
   <!-- VISÃO GERAL -->
   <section id="aba-geral" class="mt-4">
+    <div class="bg-amber-50 dark:bg-slate-900 border-2 border-amber-400 rounded-xl p-4 mb-4">
+      <label for="minhaFam" class="block font-bold text-lg">👋 Qual é o seu nome?</label>
+      <select id="minhaFam" class="mt-2 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-lg"></select>
+      <div id="meuValor" class="mt-3"></div>
+    </div>
     <h2 id="tituloGeral" class="text-xl font-bold mb-3"></h2>
     <div id="cards" class="space-y-3"></div>
   </section>
@@ -109,15 +115,11 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
     </form>
 
     <form id="fValores" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-3">
-      <h2 class="text-xl font-bold">⚙️ Valores por família</h2>
-      <label class="block">💧 Água (R$)
-        <input id="vAgua" type="number" step="0.01" min="0" class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-3 py-2">
-      </label>
-      <label class="block">⚡ Luz (R$)
-        <input id="vLuz" type="number" step="0.01" min="0" class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-3 py-2">
-      </label>
-      <p class="text-sm opacity-80">Pagamentos já feitos mantêm o valor que foi pago na época.</p>
-      <button class="w-full bg-[#16305a] hover:bg-[#1d3f75] text-white font-bold rounded-xl py-3">Salvar valores</button>
+      <h2 class="text-xl font-bold">⚙️ Valores de cada casa</h2>
+      <p id="fValoresMes" class="font-semibold"></p>
+      <div id="valoresCampos" class="space-y-3"></div>
+      <p class="text-sm opacity-80">Digite quanto cada casa deve pagar neste mês. Pagamentos já feitos mantêm o valor que foi pago.</p>
+      <button class="w-full bg-[#16305a] hover:bg-[#1d3f75] text-white font-bold rounded-xl py-3">Salvar valores do mês</button>
     </form>
 
     <form id="fNomes" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-3">
@@ -172,16 +174,23 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
       <button class="w-full bg-[#16305a] hover:bg-[#1d3f75] text-white font-bold rounded-xl py-3">Criar caixinha</button>
     </form>
   </section>
+  <!-- BOA CONVIVÊNCIA -->
+  <section id="aba-convivencia" class="mt-4 hidden space-y-4">
+    <div>
+      <h2 class="text-xl font-bold">🤝 Boa Convivência</h2>
+      <p class="opacity-80">Combinados simples para o quintal ser um lugar bom para todo mundo.</p>
+    </div>
+    <div id="acordos" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+    <p class="rounded-xl bg-sky-100 dark:bg-sky-950 text-sky-900 dark:text-sky-100 p-3">💙 Um quintal bom é feito de pequenos cuidados. Se algo incomodar, converse com educação: quase sempre se resolve rápido.</p>
+    <button id="btnZapAcordos" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl py-3 text-lg">📋 Copiar combinados para o Zap</button>
+  </section>
 </main>
 
-<div id="aviso" class="fixed left-1/2 -translate-x-1/2 bottom-16 bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-4 py-3 rounded-xl shadow-lg hidden z-30"></div>
+<div id="aviso" class="fixed left-1/2 -translate-x-1/2 bottom-6 bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-4 py-3 rounded-xl shadow-lg hidden z-30"></div>
 
-<footer class="fixed bottom-0 inset-x-0 bg-white/95 dark:bg-slate-900/95 border-t border-slate-200 dark:border-slate-700 text-center text-sm py-2 z-20">
-  <span id="acesso">👁️ Acessado em: …</span> <span class="opacity-70">| Monitorado</span>
-</footer>
 
 <script>
-const CHAVE='quintal:v1', CHAVE_LOG='quintal:acessos';
+const CHAVE='quintal:v1';
 const CONTAS=[{k:'agua',ic:'💧',nome:'Água'},{k:'luz',ic:'⚡',nome:'Luz'}];
 const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const $=s=>document.querySelector(s);
@@ -189,8 +198,8 @@ const brl=n=>n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const p2=n=>String(n).padStart(2,'0');
 
-const padrao=()=>({valores:{agua:50,luz:80},familias:[1,2,3,4,5].map(n=>({nome:'Família '+n,casa:'Casa '+n})),pagos:{},fundos:[]});
-function carregar(){try{const d=JSON.parse(localStorage.getItem(CHAVE));if(d&&d.familias&&d.valores&&d.pagos){d.fundos=d.fundos||[];return d}}catch(e){}return padrao()}
+const padrao=()=>({valores:{agua:50,luz:80},familias:[1,2,3,4,5].map(n=>({nome:'Família '+n,casa:'Casa '+n})),pagos:{},fundos:[],valoresMes:{}});
+function carregar(){try{const d=JSON.parse(localStorage.getItem(CHAVE));if(d&&d.familias&&d.valores&&d.pagos){d.fundos=d.fundos||[];d.valoresMes=d.valoresMes||{};return d}}catch(e){}return padrao()}
 function salvar(){try{localStorage.setItem(CHAVE,JSON.stringify(S))}catch(e){aviso('⚠️ Não consegui salvar neste aparelho.')}}
 let S=carregar(), mesAtual='';
 
@@ -206,24 +215,19 @@ function listaMeses(){
 }
 const MES_LISTA=listaMeses();
 
-/* ---------- acesso (relógio + registro) ---------- */
+/* ---------- relógio ---------- */
 function agoraTexto(){const d=new Date();return `${p2(d.getDate())}/${p2(d.getMonth()+1)}/${d.getFullYear()} às ${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`}
-function registrarAcesso(){
-  const reg={quando:new Date().toISOString(),texto:agoraTexto(),aparelho:navigator.userAgent};
-  try{const l=JSON.parse(localStorage.getItem(CHAVE_LOG)||'[]');l.push(reg);localStorage.setItem(CHAVE_LOG,JSON.stringify(l.slice(-200)))}catch(e){}
-  // Ponto de ligação com o seu app de monitoramento: defina window.onAcessoRegistrado = function(reg){...}
-  if(typeof window.onAcessoRegistrado==='function'){try{window.onAcessoRegistrado(reg)}catch(e){}}
-  $('#acesso').textContent='👁️ Acessado em: '+reg.texto;
-}
 function tick(){const d=new Date();const dias=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];$('#relogio').textContent=`${dias[d.getDay()]}, ${agoraTexto().replace(' às ',' - ')}`}
 
 /* ---------- dados ---------- */
 const chave=(mes,i,k)=>`${mes}|${i}|${k}`;
+const vtxt=v=>v==null?'a definir':brl(v);
+function valorMes(mes,i,k){const m=S.valoresMes[mes];return m&&m[i]&&typeof m[i][k]==='number'?m[i][k]:null}
 function itens(mes){
   const r=[];
   S.familias.forEach((f,i)=>CONTAS.forEach(c=>{
     const pg=S.pagos[chave(mes,i,c.k)];
-    r.push({i,fam:f,conta:c,mes,pago:!!pg,data:pg?pg.data:null,valor:pg?pg.valor:S.valores[c.k]});
+    r.push({i,fam:f,conta:c,mes,pago:!!pg,data:pg?pg.data:null,valor:pg?pg.valor:valorMes(mes,i,c.k)});
   }));
   return r;
 }
@@ -243,14 +247,14 @@ function render(){
       <div class="mt-2 space-y-2">
         ${it.filter(x=>x.i===i).map(x=>`
           <div class="flex flex-wrap items-center gap-2">
-            <span class="${x.conta.k==='agua'?'bg-sky-100 text-sky-900 dark:bg-sky-900 dark:text-sky-50':'bg-amber-100 text-amber-900 dark:bg-amber-900 dark:text-amber-50'} rounded-full px-3 py-1 font-semibold">${x.conta.ic} ${x.conta.nome}: ${brl(x.valor)}</span>
+            <span class="${x.conta.k==='agua'?'bg-sky-100 text-sky-900 dark:bg-sky-900 dark:text-sky-50':'bg-amber-100 text-amber-900 dark:bg-amber-900 dark:text-amber-50'} rounded-full px-3 py-1 font-semibold">${x.conta.ic} ${x.conta.nome}: ${vtxt(x.valor)}</span>
             ${x.pago
               ?`<span class="bg-green-100 text-green-900 dark:bg-green-900 dark:text-green-50 rounded-full px-3 py-1 font-semibold">🟢 PAGO em ${dm(x.data)}</span>`
-              :`<span class="bg-red-100 text-red-900 dark:bg-red-900 dark:text-red-50 rounded-full px-3 py-1 font-semibold">🔴 PENDENTE</span>`}
+              :x.valor==null?`<span class="bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-50 rounded-full px-3 py-1 font-semibold">⏳ VALOR A DEFINIR</span>`:`<span class="bg-red-100 text-red-900 dark:bg-red-900 dark:text-red-50 rounded-full px-3 py-1 font-semibold">🔴 PENDENTE</span>`}
           </div>`).join('')}
       </div>
     </div>`).join('');
-  renderHist();renderFundos();
+  renderHist();renderFundos();renderValoresForm();renderMeu();
   $('#fPagarMes').textContent='Mês selecionado: '+nomeMes(mesAtual);
 }
 function renderHist(){
@@ -265,7 +269,7 @@ function renderHist(){
       <td class="p-3 font-semibold">${esc(x.fam.nome)}</td>
       <td class="p-3 whitespace-nowrap">${x.conta.ic} ${x.conta.nome}</td>
       <td class="p-3 whitespace-nowrap">${nomeMes(x.mes)}</td>
-      <td class="p-3 whitespace-nowrap">${brl(x.valor)}</td>
+      <td class="p-3 whitespace-nowrap">${vtxt(x.valor)}</td>
       <td class="p-3 whitespace-nowrap">${x.pago?'🟢 Pago em '+dataBR(x.data):'🔴 Pendente'}</td>
     </tr>`).join('')
     :`<tr><td colspan="5" class="p-4 text-center opacity-80">Nenhum registro encontrado. Mude os filtros acima.</td></tr>`;
@@ -274,13 +278,15 @@ function montarSelects(){
   const opMes=MES_LISTA.map(m=>`<option value="${m}">${nomeMes(m)}</option>`).join('');
   $('#mes').innerHTML=opMes;
   $('#hMes').innerHTML='<option value="todos">Todos os meses</option>'+opMes;
+  $('#minhaFam').innerHTML='<option value="">— Escolha seu nome —</option>'+S.familias.map((f,i)=>`<option value="${i}">${esc(f.nome)}</option>`).join('');
+  try{$('#minhaFam').value=localStorage.getItem('quintal:minhaFam')||''}catch(e){}
   $('#pFam').innerHTML=S.familias.map((f,i)=>`<option value="${i}">${esc(f.nome)} (${esc(f.casa)})</option>`).join('');
   $('#nomesCampos').innerHTML=S.familias.map((f,i)=>`
     <div class="grid grid-cols-2 gap-2">
       <input data-nome="${i}" value="${esc(f.nome)}" aria-label="Nome da família ${i+1}" class="rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-3 py-2">
       <input data-casa="${i}" value="${esc(f.casa)}" aria-label="Casa da família ${i+1}" class="rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-3 py-2">
     </div>`).join('');
-  $('#vAgua').value=S.valores.agua;$('#vLuz').value=S.valores.luz;
+  
 }
 
 /* ---------- caixinha (Outros) ---------- */
@@ -338,12 +344,12 @@ function aviso(t){const a=$('#aviso');a.textContent=t;a.classList.remove('hidden
 
 /* ---------- abas ---------- */
 function abrirAba(nome){
-  ['geral','hist','admin','outros'].forEach(n=>$('#aba-'+n).classList.toggle('hidden',n!==nome));
+  ['geral','hist','admin','outros','convivencia'].forEach(n=>$('#aba-'+n).classList.toggle('hidden',n!==nome));
   document.querySelectorAll('.aba').forEach(b=>{
     const on=b.dataset.aba===nome;
     b.classList.toggle('border-b-4',on);b.classList.toggle('border-[#16305a]',on);
     b.classList.toggle('dark:border-sky-400',on);b.classList.toggle('text-[#16305a]',on);
-    b.classList.toggle('dark:text-sky-300',on);b.setAttribute('aria-selected',on);
+    b.classList.toggle('dark:text-sky-300',on);b.setAttribute('aria-selected',on);if(on&&b.scrollIntoView)b.scrollIntoView({inline:'center',block:'nearest'});
   });
 }
 
@@ -358,10 +364,10 @@ function aplicarTema(escuro){
 function textoZap(){
   const it=itens(mesAtual),pg=it.filter(x=>x.pago),pd=it.filter(x=>!x.pago);
   const soma=a=>brl(a.reduce((t,x)=>t+x.valor,0));
-  let t=`*🏠 Gestão do Quintal — ${nomeMes(mesAtual)}*\n\n🟢 Arrecadado: ${soma(pg)} (${pg.length} de ${it.length})\n🔴 Falta pagar: ${soma(pd)} (${pd.length} de ${it.length})\n`;
+  let t=`*🏠 Jambalaya — ${nomeMes(mesAtual)}*\n\n🟢 Arrecadado: ${soma(pg)} (${pg.length} de ${it.length})\n🔴 Falta pagar: ${soma(pd)} (${pd.length} de ${it.length})\n`;
   S.familias.forEach((f,i)=>{
     t+=`\n*${f.nome}* (${f.casa})\n`;
-    it.filter(x=>x.i===i).forEach(x=>{t+=`${x.conta.ic} ${x.conta.nome} ${brl(x.valor)} — ${x.pago?'🟢 Pago em '+dm(x.data):'🔴 Pendente'}\n`});
+    it.filter(x=>x.i===i).forEach(x=>{t+=`${x.conta.ic} ${x.conta.nome} ${vtxt(x.valor)} — ${x.pago?'🟢 Pago em '+dm(x.data):'🔴 Pendente'}\n`});
   });
   if(S.fundos.length){
     t+='\n\n*🏦 Caixinha do quintal*\n';
@@ -389,7 +395,9 @@ document.querySelectorAll('.aba').forEach(b=>b.onclick=()=>abrirAba(b.dataset.ab
 $('#fPagar').onsubmit=e=>{
   e.preventDefault();
   const i=+$('#pFam').value,k=$('#pConta').value,data=$('#pData').value||hojeISO();
-  S.pagos[chave(mesAtual,i,k)]={data,valor:S.valores[k]};
+  const v=valorMes(mesAtual,i,k);
+  if(v==null)return aviso('⚠️ Defina primeiro o valor desta casa em “Valores de cada casa”.');
+  S.pagos[chave(mesAtual,i,k)]={data,valor:v};
   salvar();render();aviso('✅ Pagamento registrado!');
 };
 $('#btnDesfazer').onclick=()=>{
@@ -399,9 +407,20 @@ $('#btnDesfazer').onclick=()=>{
 };
 $('#fValores').onsubmit=e=>{
   e.preventDefault();
-  const a=parseFloat($('#vAgua').value),l=parseFloat($('#vLuz').value);
-  if(isNaN(a)||isNaN(l)||a<0||l<0)return aviso('⚠️ Digite valores válidos.');
-  S.valores={agua:a,luz:l};salvar();render();aviso('✅ Valores salvos!');
+  const arr=[];let ok=true,algum=false;
+  S.familias.forEach((f,i)=>{
+    const r={};
+    [['agua','va'],['luz','vl']].forEach(([k,a])=>{
+      const raw=document.querySelector(`[data-${a}="${i}"]`).value.trim();
+      if(raw==='')return;
+      const n=parseFloat(raw);
+      if(isNaN(n)||n<0)ok=false;else{r[k]=n;algum=true}
+    });
+    arr.push(r);
+  });
+  if(!ok)return aviso('⚠️ Digite valores válidos.');
+  if(algum)S.valoresMes[mesAtual]=arr;else delete S.valoresMes[mesAtual];
+  salvar();render();aviso('✅ Valores de '+nomeMes(mesAtual)+' salvos!');
 };
 $('#fNomes').onsubmit=e=>{
   e.preventDefault();
@@ -446,6 +465,53 @@ $('#fundoCards').onclick=e=>{
   }
 };
 
+/* ---------- valores por casa + "minha casa" ---------- */
+function renderValoresForm(){
+  const salvo=S.valoresMes[mesAtual];
+  let base=salvo;
+  if(!base){const ant=Object.keys(S.valoresMes).filter(m=>m<mesAtual).sort().pop();base=ant?S.valoresMes[ant]:null}
+  $('#fValoresMes').textContent='Mês selecionado: '+nomeMes(mesAtual)+(salvo?'':' — valores ainda não definidos'+(base?' (começando com os do último mês definido)':''));
+  const cls='mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-lg';
+  $('#valoresCampos').innerHTML=S.familias.map((f,i)=>{
+    const b=(base&&base[i])||{},v=k=>typeof b[k]==='number'?b[k]:'';
+    return `<div class="rounded-lg border border-slate-200 dark:border-slate-700 p-3">
+      <div class="font-bold mb-2">${esc(f.nome)} (${esc(f.casa)})</div>
+      <div class="grid grid-cols-2 gap-2">
+        <label class="block text-sm">💧 Água (R$)<input data-va="${i}" type="number" step="0.01" min="0" inputmode="decimal" value="${v('agua')}" placeholder="0,00" class="${cls}"></label>
+        <label class="block text-sm">⚡ Luz (R$)<input data-vl="${i}" type="number" step="0.01" min="0" inputmode="decimal" value="${v('luz')}" placeholder="0,00" class="${cls}"></label>
+      </div></div>`}).join('');
+}
+function renderMeu(){
+  const mi=$('#minhaFam').value,box=$('#meuValor');
+  if(mi===''){box.innerHTML=`<p>Escolha seu nome acima para ver quanto você paga em <b>${nomeMes(mesAtual)}</b>.</p>`;return}
+  const mine=itens(mesAtual).filter(x=>x.i===+mi);
+  const tot=mine.reduce((t,x)=>t+x.valor,0),falta=mine.filter(x=>!x.pago).reduce((t,x)=>t+x.valor,0),indef=mine.some(x=>x.valor==null&&!x.pago);
+  box.innerHTML=`<div class="font-semibold mb-1">${esc(S.familias[+mi].nome)} — ${nomeMes(mesAtual)}</div>
+    <div class="space-y-1">${mine.map(x=>`<div class="flex flex-wrap items-center justify-between gap-2 text-lg">
+      <span>${x.conta.ic} ${x.conta.nome}</span><span class="font-extrabold">${vtxt(x.valor)}</span>
+      <span class="text-sm">${x.pago?'🟢 Pago em '+dm(x.data):x.valor==null?'⏳ A definir':'🔴 Pendente'}</span></div>`).join('')}</div>
+    <div class="border-t border-amber-300 dark:border-slate-600 mt-2 pt-2 flex justify-between text-xl"><span class="font-bold">Total do mês</span><span class="font-extrabold">${brl(tot)}</span></div>
+    <div class="mt-1 text-lg">${falta>0?`🔴 Falta pagar: <b>${brl(falta)}</b>`:indef?'⏳ O valor deste mês ainda não foi definido.':'🟢 Tudo pago neste mês. Obrigado!'}</div>`;
+}
+$('#minhaFam').onchange=e=>{try{localStorage.setItem('quintal:minhaFam',e.target.value)}catch(err){}renderMeu()};
+
+/* ---------- boa convivência ---------- */
+const ACORDOS=[
+ {ic:'🤫',t:'Silêncio depois das 22h',d:'Música baixa, conversa em voz baixa e cuidado com portão e portas à noite. Todo mundo precisa descansar.',cls:'bg-indigo-50 border-indigo-300 dark:bg-indigo-950 dark:border-indigo-700'},
+ {ic:'💧',t:'Vazamento? Avise na hora',d:'Viu torneira pingando, cano molhado ou fio solto? Avise o grupo rápido. Resolver cedo economiza dinheiro de todos.',cls:'bg-sky-50 border-sky-300 dark:bg-sky-950 dark:border-sky-700'},
+ {ic:'🧹',t:'Áreas comuns limpas',d:'Usou, deixou limpo. Varra, guarde o que pegou e não deixe objetos atrapalhando a passagem.',cls:'bg-emerald-50 border-emerald-300 dark:bg-emerald-950 dark:border-emerald-700'},
+ {ic:'🗑️',t:'Lixo no lugar certo',d:'Lixo bem fechado, no lugar e nos dias combinados. Separe o que puder e não deixe sacos no chão.',cls:'bg-amber-50 border-amber-300 dark:bg-amber-950 dark:border-amber-700'},
+ {ic:'💡',t:'Água e luz com consciência',d:'Torneira fechada, luz apagada ao sair. Cuidar do consumo ajuda a conta de todo mundo.',cls:'bg-yellow-50 border-yellow-300 dark:bg-yellow-950 dark:border-yellow-700'},
+ {ic:'🙋',t:'Visitas e festas: combine antes',d:'Vai receber muita gente? Avise os vizinhos antes e respeite o horário de silêncio.',cls:'bg-rose-50 border-rose-300 dark:bg-rose-950 dark:border-rose-700'}
+];
+function renderAcordos(){
+  $('#acordos').innerHTML=ACORDOS.map(a=>`<div class="rounded-xl border-2 p-4 ${a.cls}"><div class="text-4xl" aria-hidden="true">${a.ic}</div><div class="mt-1 text-xl font-bold">${a.t}</div><p class="mt-1">${a.d}</p></div>`).join('');
+}
+$('#btnZapAcordos').onclick=async()=>{
+  const t='*🤝 Combinados do nosso quintal*\n\n'+ACORDOS.map(a=>`${a.ic} *${a.t}*\n${a.d}`).join('\n\n')+'\n\n💙 Quintal bom é feito de pequenos cuidados. Obrigado, pessoal!';
+  aviso(await copiar(t)?'✅ Combinados copiados! Cole no WhatsApp.':'⚠️ Não deu para copiar. Tente de novo.');
+};
+
 /* ---------- início ---------- */
 (function iniciar(){
   aplicarTema(document.documentElement.classList.contains('dark'));
@@ -453,8 +519,9 @@ $('#fundoCards').onclick=e=>{
   mesAtual=`${new Date().getFullYear()}-${p2(new Date().getMonth()+1)}`;
   if(!MES_LISTA.includes(mesAtual))mesAtual=mesAtual<MES_LISTA[0]?MES_LISTA[0]:MES_LISTA[MES_LISTA.length-1];
   $('#mes').value=mesAtual;$('#hMes').value='todos';$('#pData').value=hojeISO();$('#cData').value=hojeISO();
-  abrirAba('geral');render();
-  registrarAcesso();tick();setInterval(tick,1000);
+  abrirAba('geral');render();renderAcordos();
+  try{localStorage.removeItem('quintal:acessos')}catch(e){}
+  tick();setInterval(tick,1000);
 })();
 </script>
 </body>
