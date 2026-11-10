@@ -1,596 +1,257 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Jambalaya</title>
-<meta name="theme-color" content="#16305a">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rotina Dashboard</title>
+<meta name="theme-color" content="#0f1117">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Jambalaya">
-<script>
-if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){
-  window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})});
-}
-</script>
-<script src="https://cdn.tailwindcss.com/3.4.17"></script>
-<script>tailwind.config={darkMode:'class'}</script>
-<script>try{if(localStorage.getItem('quintal:tema')==='escuro')document.documentElement.classList.add('dark')}catch(e){}</script>
 <style>
-html{font-size:18px}
-body{-webkit-tap-highlight-color:transparent}
-button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #f59e0b;outline-offset:2px}
+:root{color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#0f1117;--card:#181b24;--tx:#eceef4;--mut:#9096a8;--ln:#272b38;--ac:#22d3ee}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:640px;margin:0 auto;padding:14px 14px 40px}
+h2{font-size:15px;margin:0 0 10px;letter-spacing:.02em}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:18px;padding:16px;margin:0 0 16px;box-shadow:0 6px 18px rgba(0,0,0,.28)}
+.sub{color:var(--mut);font-size:13.5px;margin:0 0 8px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:8px 0}
+.row label{font-size:14px;color:var(--mut)}
+.chk{display:flex;align-items:center;gap:8px;min-width:118px;color:var(--tx)!important;font-weight:600}
+input,select,textarea,button{font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--ln);border-radius:12px;padding:8px 10px;min-height:40px}
+input[type=checkbox]{min-height:0;width:20px;height:20px;accent-color:var(--ac)}
+input[type=text],input[type=number]{flex:1;min-width:120px}
+textarea{width:100%;min-height:90px;resize:vertical}
+button,.btn{background:var(--ac);color:#06222a;border:0;font-weight:700;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;border-radius:12px;min-height:40px}
+button.ghost{background:transparent;color:var(--mut);border:1px solid var(--ln);font-weight:500}
+button.on{background:var(--ac);color:#06222a}
+button.opt{background:var(--bg);color:var(--tx);border:1px solid var(--ln)}
+#wb{position:fixed;left:0;right:0;top:0;z-index:50;padding:calc(env(safe-area-inset-top,0px) + 8px) 12px 8px;display:none;justify-content:center}
+#wb div{background:#0e7490;color:#fff;border-radius:14px;padding:10px 16px;font-weight:700;box-shadow:0 8px 20px rgba(0,0,0,.4);cursor:pointer}
+.hd{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+#clk{font-size:34px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+.big{font-size:44px;font-weight:800;font-variant-numeric:tabular-nums;text-align:center;color:var(--ac);margin:6px 0}
+.tag{display:inline-flex;gap:6px;align-items:center;background:var(--bg);border:1px solid var(--ln);border-radius:20px;padding:4px 6px 4px 12px;font-size:14px;margin:4px 6px 0 0}
+.tag button,li button{padding:0 9px;min-height:28px;border-radius:14px;background:transparent;color:var(--mut)}
+.blk{--c:#64748b;border-left:5px solid var(--c);background:color-mix(in srgb,var(--c) 13%,var(--card));border-radius:12px;padding:10px 12px;margin:8px 0}
+.blk .t{font-variant-numeric:tabular-nums;font-weight:700;font-size:14px;color:var(--c)}
+.blk .n{font-weight:600}.blk .d{font-size:13.5px;color:var(--mut)}
+.study{--c:#22c55e}.gym{--c:#ef4444}.ifood{--c:#a855f7}.poker{--c:#8b5cf6}.extra{--c:#f59e0b}.rest{--c:#38bdf8}.free{--c:#94a3b8}.sleep{--c:#475569}.wake{--c:#eab308}
+.warn{background:color-mix(in srgb,#f59e0b 16%,var(--card));border:1px solid #f59e0b;border-radius:12px;padding:8px 12px;margin:8px 0;font-size:14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.m{background:var(--bg);border:1px solid var(--ln);border-radius:12px;padding:8px 10px}
+.m small{display:block;color:var(--mut);font-size:12px}.m b{font-size:16px}
+ul{margin:6px 0;padding:0;list-style:none}
+li{display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--ln);font-size:15px}
+li span{flex:1}li.done span{text-decoration:line-through;color:var(--mut)}
+.lk{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.lk a{background:var(--bg);border:1px solid var(--ln);border-radius:12px;padding:10px 6px;text-align:center;color:var(--tx);text-decoration:none;font-size:13.5px}
+.hide{display:none}.pos{color:#4ade80}.neg{color:#f87171}
 </style>
 </head>
-<body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-50 min-h-screen pb-8">
+<body>
+<div id="wb"><div id="wbt">💧 Hora de Hidratar!</div></div>
+<main>
 
-<header class="bg-[#16305a] dark:bg-slate-900 text-white px-4 pt-3 pb-4 sticky top-0 z-20 shadow">
-  <div class="flex items-center justify-between gap-2">
-    <button id="btnInstalar" class="hidden bg-white/15 hover:bg-white/25 rounded-full px-3 py-1 text-sm font-semibold">📲 Instalar app</button>
-    <div id="relogio" class="ml-auto text-right text-sm opacity-90"></div>
+<section class="card">
+  <div class="hd">
+    <div><div id="clk">--:--:--</div><div class="sub" id="dt"></div><div><b>São Paulo</b></div></div>
+    <div style="text-align:right"><div style="font-size:30px;font-weight:700" id="tp">--°</div><div class="sub" id="wc">Clima…</div><div class="sub" id="mm"></div></div>
   </div>
-  <div class="flex items-center gap-3 mt-1">
-    <div class="text-3xl bg-white/10 rounded-xl w-12 h-12 flex items-center justify-center" aria-hidden="true">🏠</div>
-    <div class="flex-1 min-w-0">
-      <h1 class="text-xl font-bold leading-tight">Jambalaya</h1>
-      <p class="text-sm opacity-90">Água &amp; Luz (5 Famílias) <span id="nuvem"></span></p>
-    </div>
-    <button id="btnTema" class="bg-white/15 hover:bg-white/25 rounded-full w-12 h-12 text-2xl" aria-label="Trocar entre tema claro e escuro">🌙</button>
-  </div>
-  <button id="btnZap" class="mt-3 w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-bold rounded-xl py-3 text-lg">📋 Copiar resumo para o Zap</button>
-</header>
+</section>
 
-<main class="max-w-3xl mx-auto px-4 pt-4">
+<section class="card">
+  <h2>📅 CRONOGRAMA REORGANIZADO DO DIA</h2>
+  <div class="row"><label>Dia <select id="day"></select></label><label>Acordar <input type="time" id="wake"></label><label id="friL" class="hide">Sexta <select id="fri"><option>Poker (revisão de mãos/teoria)</option><option>IA</option></select></label></div>
+  <div class="row"><label class="chk"><input type="checkbox" id="gymOn"> Academia</label><label>início <input type="time" id="gymT"></label><span class="sub" style="margin:0">vazio = auto (2h)</span></div>
+  <div class="row"><label class="chk"><input type="checkbox" id="ifOn"> iFood</label><label>início <input type="time" id="ifT"></label><label>horas <select id="ifH"><option>5</option><option>6</option><option>7</option></select></label></div>
+  <div class="row"><label class="chk"><input type="checkbox" id="pkOn"> Poker</label><label>duração <select id="pkH"><option>2</option><option>3</option><option>4</option></select>h</label><label>início <input type="time" id="pkT"></label></div>
+  <div class="row"><input type="text" id="xn" placeholder="Compromisso surpresa"><input type="time" id="xs"><input type="time" id="xe"><button id="xa">+</button></div>
+  <div id="xl"></div>
+  <div id="warns"></div>
+  <div id="tl"></div>
+  <p class="sub" id="fc"></p>
+  <p class="sub" id="tp2"></p>
+</section>
 
-  <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3 flex items-center gap-3">
-    <label for="mes" class="font-semibold">📅 Mês:</label>
-    <select id="mes" class="flex-1 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-lg"></select>
-  </div>
+<section class="card">
+  <h2>🎯 MODO FOCO</h2>
+  <p class="sub">Uma coisa por vez: escolha o tempo, comece e ignore o resto.</p>
+  <div class="big" id="tm">25:00</div>
+  <div class="row" style="justify-content:center"><button class="opt" data-m="15">15 min</button><button class="opt on" data-m="25">25 min</button><button class="opt" data-m="45">45 min</button></div>
+  <div class="row" style="justify-content:center"><button id="go">Começar</button><button class="ghost" id="zr">Zerar</button></div>
+  <p class="sub" style="text-align:center;margin:4px 0 0"><b id="fh">FOCOS HOJE: 0</b> · <span id="xp">0 XP</span> · +20 XP por ciclo</p>
+</section>
 
-  <p class="mt-3 bg-sky-100 dark:bg-sky-950 text-sky-900 dark:text-sky-100 rounded-xl p-3">💡 Olá! Veja aqui quem já pagou e o que falta pagar este mês.</p>
+<section class="card">
+  <h2>💵 RENDA GERAL &amp; FINANÇAS</h2>
+  <div class="grid" id="mt"></div>
+  <div class="row"><button class="opt on" data-t="ifood">🛵 iFood</button><button class="opt" data-t="poker">🃏 Poker</button><button class="opt" data-t="livre">🟡 Livres</button></div>
+  <p class="sub" id="tn"></p>
+  <div class="row"><input type="number" step="0.01" id="iv" placeholder="Valor (R$)"><input type="text" id="in" placeholder="Nota (opcional)"><button id="ia">+</button></div>
+  <div class="row" id="bkr"><label>Banca inicial (R$) <input type="number" step="0.01" id="bk"></label></div>
+  <ul id="il"></ul>
+</section>
 
-  <div class="grid grid-cols-2 gap-3 mt-3">
-    <div class="rounded-xl border-2 border-green-600 bg-white dark:bg-slate-900 p-3">
-      <div class="text-sm">Total arrecadado</div>
-      <div id="totPago" class="text-2xl font-extrabold text-green-700 dark:text-green-400"></div>
-      <div id="qtdPago" class="text-sm"></div>
-    </div>
-    <div class="rounded-xl border-2 border-red-600 bg-white dark:bg-slate-900 p-3">
-      <div class="text-sm">Falta pagar</div>
-      <div id="totPend" class="text-2xl font-extrabold text-red-700 dark:text-red-400"></div>
-      <div id="qtdPend" class="text-sm"></div>
-    </div>
-  </div>
+<section class="card">
+  <h2>📝 IDEIAS DO DIA / BRAIN DUMP</h2>
+  <textarea id="nt" placeholder="Descarregue o cérebro aqui…"></textarea>
+  <div class="row"><a class="btn" href="intent://#Intent;action=android.intent.action.SHOW_ALARMS;end">⏰ Criar Alarme no Celular</a><button id="kp">📌 Enviar para o Google Keep</button></div>
+  <p class="sub" id="ks"></p>
+</section>
 
-  <nav class="mt-4 flex border-b-2 border-slate-200 dark:border-slate-700 overflow-x-auto" role="tablist">
-    <button data-aba="geral" class="aba px-4 py-3 font-semibold whitespace-nowrap">📊 Visão Geral</button>
-    <button data-aba="hist" class="aba px-4 py-3 font-semibold whitespace-nowrap">🧾 Histórico</button>
-    <button data-aba="admin" class="aba px-4 py-3 font-semibold whitespace-nowrap">✏️ Lançar / Administrar</button>
-    <button data-aba="outros" class="aba px-4 py-3 font-semibold whitespace-nowrap">🏦 Caixinha do Quintal</button>
-  </nav>
+<section class="card">
+  <h2>📰 MURAL GEEK &amp; NOTÍCIAS</h2>
+  <p class="sub">Tecnologia</p><div class="lk"><a href="https://www.tecmundo.com.br" target="_blank" rel="noopener">TecMundo</a><a href="https://tecnoblog.net" target="_blank" rel="noopener">Tecnoblog</a><a href="https://www.theverge.com" target="_blank" rel="noopener">The Verge</a></div>
+  <p class="sub" style="margin-top:10px">Anime</p><div class="lk"><a href="https://www.animenewsnetwork.com" target="_blank" rel="noopener">Anime News Network</a><a href="https://www.crunchyroll.com/news" target="_blank" rel="noopener">Crunchyroll News</a><a href="https://www.animeunited.com.br" target="_blank" rel="noopener">AnimeUnited</a></div>
+  <p class="sub" style="margin-top:10px">Cinema</p><div class="lk"><a href="https://www.omelete.com.br" target="_blank" rel="noopener">Omelete</a><a href="https://www.adorocinema.com" target="_blank" rel="noopener">AdoroCinema</a><a href="https://variety.com" target="_blank" rel="noopener">Variety</a></div>
+  <div class="row"><input type="text" id="hn" placeholder="Manchete do dia"><button id="ha">+</button></div>
+  <ul id="hl"></ul>
+</section>
 
-  <!-- VISÃO GERAL -->
-  <section id="aba-geral" class="mt-4">
-    <div class="bg-amber-50 dark:bg-slate-900 border-2 border-amber-400 rounded-xl p-4 mb-4">
-      <label for="minhaFam" class="block font-bold text-lg">👋 Qual é o seu nome?</label>
-      <select id="minhaFam" class="mt-2 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-lg"></select>
-      <div id="meuValor" class="mt-3"></div>
-    </div>
-    <h2 id="tituloGeral" class="text-xl font-bold mb-3"></h2>
-    <div id="cards" class="space-y-3"></div>
-  </section>
+<section class="card">
+  <h2>🎬 PARA ASSISTIR, LER E JOGAR</h2>
+  <div class="row"><input type="text" id="wt" placeholder="Título do item"><select id="wk"><option>Série</option><option>Anime</option><option>Filme</option><option>Game</option><option>Livro</option></select><button id="wa">+ Adicionar</button></div>
+  <p class="sub" id="wc2">0/0 itens concluídos</p>
+  <ul id="wl"></ul>
+</section>
 
-  <!-- HISTÓRICO -->
-  <section id="aba-hist" class="mt-4 hidden">
-    <h2 class="text-xl font-bold mb-3">Histórico de pagamentos</h2>
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
-      <input id="hBusca" type="search" placeholder="🔍 Buscar família" class="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2">
-      <select id="hMes" class="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2"></select>
-      <select id="hStatus" class="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2">
-        <option value="pago">🟢 Só pagos</option>
-        <option value="pend">🔴 Só pendentes</option>
-        <option value="todos">Todos</option>
-      </select>
-    </div>
-    <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
-      <table class="w-full text-left bg-white dark:bg-slate-900">
-        <thead class="bg-slate-100 dark:bg-slate-800 text-sm">
-          <tr><th class="p-3">Família</th><th class="p-3">Conta</th><th class="p-3">Mês</th><th class="p-3">Valor</th><th class="p-3">Situação</th></tr>
-        </thead>
-        <tbody id="hLinhas"></tbody>
-      </table>
-    </div>
-  </section>
-
-  <!-- ADMIN -->
-  <section id="aba-admin" class="mt-4 hidden space-y-5">
-    <form id="fPagar" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-3">
-      <h2 class="text-xl font-bold">💵 Dar baixa em pagamento</h2>
-      <p id="fPagarMes" class="text-sm opacity-80"></p>
-      <label class="block">Família
-        <select id="pFam" class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-3 py-2"></select>
-      </label>
-      <label class="block">Conta
-        <select id="pConta" class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-3 py-2">
-          <option value="agua">💧 Água</option>
-          <option value="luz">⚡ Luz</option>
-        </select>
-      </label>
-      <label class="block">Data do pagamento
-        <input id="pData" type="date" class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-3 py-2">
-      </label>
-      <div class="grid grid-cols-2 gap-3">
-        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl py-3">🟢 Marcar como pago</button>
-        <button type="button" id="btnDesfazer" class="bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl py-3">🔴 Desfazer</button>
-      </div>
-    </form>
-
-    <form id="fValores" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-3">
-      <h2 class="text-xl font-bold">⚙️ Valores de cada casa</h2>
-      <p id="fValoresMes" class="font-semibold"></p>
-      <div id="valoresCampos" class="space-y-3"></div>
-      <p class="text-sm opacity-80">Digite quanto cada casa deve pagar neste mês. Pagamentos já feitos mantêm o valor que foi pago.</p>
-      <button class="w-full bg-[#16305a] hover:bg-[#1d3f75] text-white font-bold rounded-xl py-3">Salvar valores do mês</button>
-    </form>
-
-    <form id="fNomes" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-3">
-      <h2 class="text-xl font-bold">🏘️ Nomes das famílias</h2>
-      <div id="nomesCampos" class="space-y-2"></div>
-      <button class="w-full bg-[#16305a] hover:bg-[#1d3f75] text-white font-bold rounded-xl py-3">Salvar nomes</button>
-    </form>
-
-    <button id="btnLimpar" class="w-full border-2 border-red-600 text-red-700 dark:text-red-400 font-semibold rounded-xl py-3">Apagar TODOS os dados (de todos os celulares)</button>
-  </section>
-  <!-- OUTROS -->
-  <section id="aba-outros" class="mt-4 hidden space-y-5">
-    <div>
-      <h2 class="text-xl font-bold">🏦 Caixinha do quintal</h2>
-      <p class="opacity-80">Dinheiro juntado para gastos extras: reforma, portão, festa… Aqui não importa o mês escolhido lá em cima.</p>
-    </div>
-    <div id="fundoResumo"></div>
-    <div id="fundoCards" class="space-y-3"></div>
-
-    <form id="fContrib" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-3">
-      <h2 class="text-xl font-bold">💵 Registrar contribuição</h2>
-      <label class="block">Caixinha
-        <select id="cFundo" class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-3 py-2"></select>
-      </label>
-      <label class="block">Família
-        <select id="cFam" class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-3 py-2"></select>
-      </label>
-      <label class="block">Valor (R$)
-        <input id="cValor" type="number" step="0.01" min="0" class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-3 py-2">
-      </label>
-      <label class="block">Data
-        <input id="cData" type="date" class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-3 py-2">
-      </label>
-      <div class="grid grid-cols-2 gap-3">
-        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl py-3">🟢 Marcar como pago</button>
-        <button type="button" id="btnDesfazerC" class="bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl py-3">🔴 Desfazer</button>
-      </div>
-    </form>
-
-    <form id="fNovoFundo" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-3">
-      <h2 class="text-xl font-bold">➕ Nova caixinha</h2>
-      <label class="block">Para que é o dinheiro?
-        <input id="nfNome" required maxlength="40" placeholder="Ex.: Reforma do portão" class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-3 py-2">
-      </label>
-      <label class="block">Meta, valor total estimado (R$)
-        <input id="nfMeta" type="number" step="0.01" min="1" required class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-3 py-2">
-      </label>
-      <label class="block">Valor sugerido por família (R$)
-        <input id="nfSug" type="number" step="0.01" min="0" class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-3 py-2">
-      </label>
-      <p class="text-sm opacity-80">Se deixar o valor sugerido em branco, a meta é dividida igualmente entre as famílias.</p>
-      <button class="w-full bg-[#16305a] hover:bg-[#1d3f75] text-white font-bold rounded-xl py-3">Criar caixinha</button>
-    </form>
-  </section>
 </main>
-
-<div id="aviso" class="fixed left-1/2 -translate-x-1/2 bottom-6 bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-4 py-3 rounded-xl shadow-lg hidden z-30"></div>
-
-
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script>
-const CHAVE='quintal:v1', MIGRADO='quintal:migrado';
-
-/* ============ CONFIGURAÇÃO DO FIREBASE: cole aqui os dados do seu projeto ============ */
-const FIREBASE_CONFIG={
-  authDomain:"guironasv1.firebaseapp.com",
-  databaseURL:"https://guironasv1-default-rtdb.firebaseio.com",
-  projectId:"guironasv1"
-};
-const NUVEM_CAMINHO='jambalaya/estado';
-/* ====================================================================================== */
-const CONTAS=[{k:'agua',ic:'💧',nome:'Água'},{k:'luz',ic:'⚡',nome:'Luz'}];
-const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const $=s=>document.querySelector(s);
-const brl=n=>n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const p2=n=>String(n).padStart(2,'0');
+const ld=(k,d)=>{try{const v=localStorage.getItem('rd2-'+k);return v===null?d:JSON.parse(v)}catch(e){return d}};
+const sv=(k,v)=>{try{localStorage.setItem('rd2-'+k,JSON.stringify(v))}catch(e){}};
+const pad=n=>String(n).padStart(2,'0');
+const td=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())};
+const brl=n=>n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 
-const padrao=()=>({valores:{agua:50,luz:80},familias:[1,2,3,4,5].map(n=>({nome:'Família '+n,casa:'Casa '+n})),pagos:{},fundos:[],valoresMes:{}});
-function normalizar(d){
-  const b=padrao(),o=Object.assign({},b,d||{});
-  const fam=Object.values(o.familias||{}).filter(Boolean).map((f,i)=>({nome:f.nome||('Família '+(i+1)),casa:f.casa||('Casa '+(i+1))}));
-  o.familias=fam.length?fam:b.familias;
-  o.valores=o.valores||b.valores;o.pagos=o.pagos||{};o.valoresMes=o.valoresMes||{};
-  o.fundos=Object.values(o.fundos||{}).filter(Boolean).map(f=>Object.assign({},f,{contribs:f.contribs||{}}));
-  return o;
-}
-function carregar(){try{const d=JSON.parse(localStorage.getItem(CHAVE));if(d&&d.familias)return normalizar(d)}catch(e){}return padrao()}
-function salvar(){
-  try{localStorage.setItem(CHAVE,JSON.stringify(S))}catch(e){aviso('⚠️ Não consegui salvar neste aparelho.')}
-  if(nuvem){
-    try{nuvem.set(JSON.parse(JSON.stringify(S))).catch(()=>aviso('⚠️ Não consegui enviar para a nuvem.'))}
-    catch(e){aviso('⚠️ Não consegui enviar para a nuvem.')}
-  }
-}
-let S=carregar(), mesAtual='', nuvem=null;
+/* 1. Cabeçalho */
+function tick(){const n=new Date(),o={timeZone:'America/Sao_Paulo'};
+  $('#clk').textContent=n.toLocaleTimeString('pt-BR',{...o,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  $('#dt').textContent=n.toLocaleDateString('pt-BR',{...o,weekday:'long',day:'numeric',month:'long'})}
+tick();setInterval(tick,1000);
+const WC=c=>c===0?'Céu limpo':c<=3?'Parcialmente nublado':c<=48?'Neblina':c<=57?'Garoa':c<=67?'Chuva':c<=77?'Neve':c<=82?'Pancadas de chuva':'Tempestade';
+(async()=>{try{
+  const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude=-23.55&longitude=-46.63&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&timezone=America%2FSao_Paulo&forecast_days=1');
+  const j=await r.json();
+  $('#tp').textContent=Math.round(j.current.temperature_2m)+'°C';$('#wc').textContent=WC(j.current.weather_code);
+  $('#mm').textContent='Mín '+Math.round(j.daily.temperature_2m_min[0])+'° · Máx '+Math.round(j.daily.temperature_2m_max[0])+'°';
+}catch(e){$('#wc').textContent='Clima ao vivo só na versão do GitHub'}})();
+let wt;function water(){const b=$('#wb');b.style.display='flex';clearTimeout(wt);wt=setTimeout(()=>b.style.display='none',9000);try{navigator.vibrate&&navigator.vibrate(150)}catch(e){}}
+$('#wb').onclick=()=>{$('#wb').style.display='none'};
+setInterval(water,50*60*1000);
 
-/* ---------- datas ---------- */
-const hojeISO=()=>{const d=new Date();return `${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`};
-const dataBR=iso=>{const [a,m,d]=iso.split('-');return `${d}/${m}/${a}`};
-const dm=iso=>{const [,m,d]=iso.split('-');return `${d}/${m}`};
-const nomeMes=ym=>{const [a,m]=ym.split('-');return `${MESES[+m-1]} / ${a}`};
-function listaMeses(){
-  const out=[];
-  for(let a=2026;a<=2027;a++)for(let m=1;m<=12;m++){if(a===2026&&m<6)continue;out.push(`${a}-${p2(m)}`)}
-  return out;
+/* 2. Cronograma */
+const DAYS=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+const STUDY={1:'IA para Apps',2:'Culinária (aprender 1 receita)',3:'IA / Vídeos para Airbnb',4:'Poker (revisão de mãos/teoria)'};
+const LIM=1500;
+const tm=s=>{const p=s.split(':').map(Number);return p[0]*60+p[1]};
+const fmt=t=>{t=((t%1440)+1440)%1440;return pad(Math.floor(t/60))+':'+pad(t%60)};
+const dur=m=>m>=60?(Math.floor(m/60)+'h'+(m%60?pad(m%60):'')):m+' min';
+const DEF={day:new Date().getDay(),wake:'08:00',fri:'Poker (revisão de mãos/teoria)',gymOn:true,gymT:'',ifOn:false,ifT:'13:00',ifH:6,pkOn:true,pkH:3,pkT:'',extras:[]};
+let S=Object.assign({},DEF,ld('plan',{}),{day:new Date().getDay()});
+const savePlan=()=>sv('plan',S);
+function plan(S){
+  const day=+S.day,B=[],obs=[],warns=[];
+  const add=(t,s,e,n,d)=>{const b={t,s,e,n,d};B.push(b);obs.push(b);return b};
+  const W=tm(S.wake||'08:00');
+  const fit=(d,from)=>{let t=from,ch=true;while(ch){ch=false;for(const o of obs){if(t<o.e&&t+d>o.s){t=o.e;ch=true}}}return t+d<=LIM?t:null};
+  S.extras.forEach(x=>{const s=tm(x.s),e=tm(x.e);add('extra',s,e<=s?e+1440:e,x.n,'Compromisso')});
+  if(S.ifOn){const s=tm(S.ifT||'13:00'),h=+S.ifH;add('ifood',s,s+h*60,'iFood (rua)','Bloco de '+h+'h');
+    if(S.pkOn)add('rest',s+h*60,s+h*60+60,'Descompressão: rua → tela','1h antes do poker: banho, comer, andar 10 min sem celular')}
+  if(S.gymOn&&S.gymT){const s=tm(S.gymT);add('gym',s,s+120,'Academia','Treino de 2h');add('rest',s+120,s+180,'Descompressão + almoço','1h depois da academia: comer, hidratar, sem tela')}
+  let studyName=null,st=null;
+  if(day>=1&&day<=5)studyName=day===5?S.fri:STUDY[day];
+  if(studyName){const s=fit(60,W+30);if(s!==null)st=add('study',s,s+60,'Estudo: '+studyName,'Micro-sprints: 25 min foco · 5 pausa · 25 min foco · 5 pausa');else warns.push('O estudo de 1h não coube hoje.')}
+  if(S.gymOn&&!S.gymT){const s=fit(180,st?st.e:W+30);if(s!==null){add('gym',s,s+120,'Academia','Treino de 2h (horário automático)');add('rest',s+120,s+180,'Descompressão + almoço','1h depois da academia: comer, hidratar, sem tela')}else warns.push('A academia (2h + 1h de descompressão) não coube hoje.')}
+  if(S.pkOn){let d=+S.pkH*60,from=S.pkT?tm(S.pkT):1200,s=null;
+    for(;d>=120;d-=30){s=fit(d,from);if(s!==null)break}
+    if(s!==null){add('poker',s,s+d,'Poker (grind)','Sessão de '+dur(d)+'. Alarme para parar no fim.');if(d<+S.pkH*60)warns.push('Poker reduzido para '+dur(d)+' para respeitar o teto de 01:00.')}
+    else warns.push('O poker (mínimo 2h) não cabe hoje sem passar de 01:00.')}
+  for(let i=0;i<B.length;i++)for(let j=i+1;j<B.length;j++){const a=B[i],b=B[j];if(a.s<b.e&&b.s<a.e)warns.push('Conflito de horário: '+a.n+' e '+b.n+'.')}
+  B.sort((a,b)=>a.s-b.s);
+  const out=[{t:'wake',s:W,e:W+30,n:'Acordar + café da manhã',d:'Água, luz do dia, sem redes sociais por 10 min'}];
+  let cur=W+30;
+  B.forEach(b=>{if(b.s-cur>=15)out.push({t:'free',s:cur,e:b.s,n:b.s-cur>=45?'Livre / refeição / descanso':'Respiro',d:'Sem compromisso'});out.push(b);cur=Math.max(cur,b.e)});
+  if(LIM-cur>=15)out.push({t:'free',s:cur,e:LIM,n:'Desacelerar (sem telas)',d:'Luz baixa, água, preparar o dia seguinte'});
+  out.push({t:'sleep',s:LIM,e:LIM,n:'Dormir: teto rígido',d:'Passou de 01:00 é hora de desligar tudo'});
+  return {out,warns:[...new Set(warns)],studyName,B};
 }
-const MES_LISTA=listaMeses();
+function renderPlan(){
+  const R=plan(S),has=t=>R.B.some(b=>b.t===t);
+  $('#warns').innerHTML=R.warns.map(w=>'<div class="warn">⚠️ '+esc(w)+'</div>').join('');
+  $('#tl').innerHTML=R.out.map(b=>'<div class="blk '+b.t+'"><div class="t">'+(b.t==='sleep'?fmt(b.s):fmt(b.s)+' – '+fmt(b.e))+'</div><div class="n">'+esc(b.n)+'</div><div class="d">'+esc(b.d)+'</div></div>').join('');
+  const f=[];if(R.studyName)f.push('📚 '+R.studyName);if(has('ifood'))f.push('🛵 iFood');if(has('gym'))f.push('🏋️ Academia');if(!f.length)f.push('🌿 Dia leve');f.push('😴 Dormir até 01:00');
+  $('#fc').innerHTML='<b>🎯 Foco do dia:</b> '+f.join(' · ');
+  const t=[];if(has('gym'))t.push('Depois da academia: banho, comer e água.');if(has('ifood')&&has('poker'))t.push('Da rua para a tela: banho, comer e andar 10 min sem celular.');else if(has('poker'))t.push('Antes do poker: respire 5 min e ponha o celular em modo foco.');t.push('Telas desligadas 30 min antes de dormir.');
+  $('#tp2').innerHTML='<b>⚡ Transição:</b> '+t.slice(0,2).join(' ');
+  $('#friL').classList.toggle('hide',+S.day!==5);
+  $('#xl').innerHTML=S.extras.map((x,i)=>'<span class="tag">'+esc(x.n)+' '+x.s+'–'+x.e+'<button data-i="'+i+'" aria-label="Remover">×</button></span>').join('');
+}
+function syncPlan(){$('#day').value=S.day;$('#wake').value=S.wake;$('#fri').value=S.fri;$('#gymOn').checked=S.gymOn;$('#gymT').value=S.gymT;$('#ifOn').checked=S.ifOn;$('#ifT').value=S.ifT;$('#ifH').value=S.ifH;$('#pkOn').checked=S.pkOn;$('#pkH').value=S.pkH;$('#pkT').value=S.pkT}
+$('#day').innerHTML=DAYS.map((d,i)=>'<option value="'+i+'">'+d+'</option>').join('');
+['day','wake','fri','gymT','ifT','ifH','pkH','pkT'].forEach(k=>$('#'+k).addEventListener('change',e=>{S[k]=e.target.value;savePlan();renderPlan()}));
+['gymOn','ifOn','pkOn'].forEach(k=>$('#'+k).addEventListener('change',e=>{S[k]=e.target.checked;savePlan();renderPlan()}));
+$('#xa').onclick=()=>{const n=$('#xn').value.trim()||'Compromisso',s=$('#xs').value,e=$('#xe').value;if(!s||!e)return;S.extras.push({n,s,e});$('#xn').value='';$('#xs').value='';$('#xe').value='';savePlan();renderPlan()};
+$('#xl').addEventListener('click',e=>{const i=e.target.dataset.i;if(i===undefined)return;S.extras.splice(+i,1);savePlan();renderPlan()});
 
-/* ---------- relógio ---------- */
-function agoraTexto(){const d=new Date();return `${p2(d.getDate())}/${p2(d.getMonth()+1)}/${d.getFullYear()} às ${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`}
-function tick(){const d=new Date();const dias=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];$('#relogio').textContent=`${dias[d.getDay()]}, ${agoraTexto().replace(' às ',' - ')}`}
+/* 3. Modo foco */
+let T={len:25,left:1500,end:0,run:false,iv:null};
+const F=ld('focus',{d:'',n:0,xp:0});
+const showT=()=>{$('#tm').textContent=pad(Math.floor(T.left/60))+':'+pad(T.left%60)};
+function renderF(){$('#fh').textContent='FOCOS HOJE: '+(F.d===td()?F.n:0);$('#xp').textContent=F.xp+' XP'}
+function stopT(){clearInterval(T.iv);T.run=false;$('#go').textContent='Começar'}
+function fin(){stopT();const d=td();if(F.d!==d){F.d=d;F.n=0}F.n++;F.xp+=20;sv('focus',F);try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(e){}T.left=T.len*60;showT();renderF();$('#wbt').textContent='🎯 Foco concluído! +20 XP';water();setTimeout(()=>{$('#wbt').textContent='💧 Hora de Hidratar!'},9500)}
+$('#go').onclick=()=>{if(T.run){T.left=Math.max(0,Math.round((T.end-Date.now())/1000));stopT();return}
+  T.run=true;T.end=Date.now()+T.left*1000;$('#go').textContent='Pausar';
+  T.iv=setInterval(()=>{T.left=Math.max(0,Math.round((T.end-Date.now())/1000));showT();if(T.left<=0)fin()},250)};
+$('#zr').onclick=()=>{stopT();T.left=T.len*60;showT()};
+document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{stopT();T.len=+b.dataset.m;T.left=T.len*60;showT();document.querySelectorAll('[data-m]').forEach(x=>x.classList.toggle('on',x===b))});
 
-/* ---------- dados ---------- */
-const chave=(mes,i,k)=>`${mes}|${i}|${k}`;
-const vtxt=v=>v==null?'a definir':brl(v);
-function valorMes(mes,i,k){const m=S.valoresMes[mes];return m&&m[i]&&typeof m[i][k]==='number'?m[i][k]:null}
-function itens(mes){
-  const r=[];
-  S.familias.forEach((f,i)=>CONTAS.forEach(c=>{
-    const pg=S.pagos[chave(mes,i,c.k)];
-    r.push({i,fam:f,conta:c,mes,pago:!!pg,data:pg?pg.data:null,valor:pg?pg.valor:valorMes(mes,i,c.k)});
-  }));
-  return r;
+/* 4. Renda */
+let E=ld('inc',[]),BK=ld('bank',0),TAB='ifood';
+const sum=(k,f)=>E.filter(e=>e.k===k&&f(e.d)).reduce((a,e)=>a+e.v,0);
+function renderI(){const d=td(),m=d.slice(0,7),H=x=>x===d,M=x=>x.slice(0,7)===m,A=()=>true;
+  const hi=sum('ifood',H),hp=sum('poker',H),mi=sum('ifood',M),mp=sum('poker',M),bank=BK+sum('poker',A);
+  const c=(l,v)=>'<div class="m"><small>'+l+'</small><b class="'+(v<0?'neg':'')+'">'+brl(v)+'</b></div>';
+  $('#mt').innerHTML=c('Hoje · iFood (líquido)',hi)+c('Hoje · Poker',hp)+c('Hoje · total',hi+hp)+c('Mês · iFood (líquido)',mi)+c('Mês · Poker',mp)+c('Mês · total',mi+mp)+'<div class="m" style="grid-column:1/3"><small>Banca de poker atual</small><b>'+brl(bank)+'</b></div>';
+  const L=E.map((e,i)=>({...e,i})).filter(e=>e.k===TAB).reverse().slice(0,30);
+  const tot=sum(TAB,A);
+  $('#tn').textContent=(TAB==='livre'?'Moedas livres (gastos sem culpa): ':'Total acumulado: ')+brl(tot)+(TAB==='livre'?' · não entra nos totais acima':'');
+  $('#il').innerHTML=L.map(e=>'<li><span>'+e.d.slice(8)+'/'+e.d.slice(5,7)+' · '+brl(e.v)+(e.n?' · '+esc(e.n):'')+'</span><button data-i="'+e.i+'" aria-label="Remover">×</button></li>').join('')||'<li class="sub">Nenhum lançamento ainda.</li>';
+  $('#bkr').classList.toggle('hide',TAB!=='poker');$('#bk').value=BK||'';
 }
+document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{TAB=b.dataset.t;document.querySelectorAll('[data-t]').forEach(x=>x.classList.toggle('on',x===b));renderI()});
+$('#ia').onclick=()=>{const v=parseFloat(String($('#iv').value).replace(',','.'));if(isNaN(v))return;E.push({d:td(),k:TAB,v,n:$('#in').value.trim()});sv('inc',E);$('#iv').value='';$('#in').value='';renderI()};
+$('#il').addEventListener('click',e=>{const i=e.target.dataset.i;if(i===undefined)return;E.splice(+i,1);sv('inc',E);renderI()});
+$('#bk').addEventListener('change',e=>{BK=parseFloat(e.target.value)||0;sv('bank',BK);renderI()});
 
-/* ---------- render ---------- */
-function render(){
-  const it=itens(mesAtual),pagos=it.filter(x=>x.pago),pend=it.filter(x=>!x.pago);
-  const soma=a=>a.reduce((t,x)=>t+x.valor,0);
-  $('#totPago').textContent=brl(soma(pagos));
-  $('#totPend').textContent=brl(soma(pend));
-  $('#qtdPago').textContent=`${pagos.length} de ${it.length} quitadas`;
-  $('#qtdPend').textContent=`${pend.length} de ${it.length} pendentes`;
-  $('#tituloGeral').textContent=`Situação das ${S.familias.length} Famílias`;
-  $('#cards').innerHTML=S.familias.map((f,i)=>`
-    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4">
-      <div class="text-xl font-bold">${esc(f.nome)} <span class="font-normal text-base opacity-80">(${esc(f.casa)})</span></div>
-      <div class="mt-2 space-y-2">
-        ${it.filter(x=>x.i===i).map(x=>`
-          <div class="flex flex-wrap items-center gap-2">
-            <span class="${x.conta.k==='agua'?'bg-sky-100 text-sky-900 dark:bg-sky-900 dark:text-sky-50':'bg-amber-100 text-amber-900 dark:bg-amber-900 dark:text-amber-50'} rounded-full px-3 py-1 font-semibold">${x.conta.ic} ${x.conta.nome}: ${vtxt(x.valor)}</span>
-            ${x.pago
-              ?`<span class="bg-green-100 text-green-900 dark:bg-green-900 dark:text-green-50 rounded-full px-3 py-1 font-semibold">🟢 PAGO em ${dm(x.data)}</span>`
-              :x.valor==null?`<span class="bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-50 rounded-full px-3 py-1 font-semibold">⏳ VALOR A DEFINIR</span>`:`<span class="bg-red-100 text-red-900 dark:bg-red-900 dark:text-red-50 rounded-full px-3 py-1 font-semibold">🔴 PENDENTE</span>`}
-          </div>`).join('')}
-      </div>
-    </div>`).join('');
-  renderHist();renderFundos();renderValoresForm();renderMeu();
-  $('#fPagarMes').textContent='Mês selecionado: '+nomeMes(mesAtual);
-}
-function renderHist(){
-  const busca=$('#hBusca').value.trim().toLowerCase(), mes=$('#hMes').value, st=$('#hStatus').value;
-  const meses=mes==='todos'?MES_LISTA:[mes];
-  let r=meses.flatMap(m=>itens(m)).filter(x=>x.fam.nome.toLowerCase().includes(busca));
-  if(st==='pago')r=r.filter(x=>x.pago);
-  if(st==='pend')r=r.filter(x=>!x.pago);
-  r.sort((a,b)=>(b.data||'').localeCompare(a.data||'')||b.mes.localeCompare(a.mes)||a.i-b.i);
-  $('#hLinhas').innerHTML=r.length?r.map(x=>`
-    <tr class="border-t border-slate-200 dark:border-slate-700">
-      <td class="p-3 font-semibold">${esc(x.fam.nome)}</td>
-      <td class="p-3 whitespace-nowrap">${x.conta.ic} ${x.conta.nome}</td>
-      <td class="p-3 whitespace-nowrap">${nomeMes(x.mes)}</td>
-      <td class="p-3 whitespace-nowrap">${vtxt(x.valor)}</td>
-      <td class="p-3 whitespace-nowrap">${x.pago?'🟢 Pago em '+dataBR(x.data):'🔴 Pendente'}</td>
-    </tr>`).join('')
-    :`<tr><td colspan="5" class="p-4 text-center opacity-80">Nenhum registro encontrado. Mude os filtros acima.</td></tr>`;
-}
-function montarSelects(){
-  const opMes=MES_LISTA.map(m=>`<option value="${m}">${nomeMes(m)}</option>`).join('');
-  const vh=$('#hMes').value||'todos',vp=$('#pFam').value;
-  $('#mes').innerHTML=opMes;
-  $('#hMes').innerHTML='<option value="todos">Todos os meses</option>'+opMes;
-  $('#minhaFam').innerHTML='<option value="">— Escolha seu nome —</option>'+S.familias.map((f,i)=>`<option value="${i}">${esc(f.nome)}</option>`).join('');
-  try{$('#minhaFam').value=localStorage.getItem('quintal:minhaFam')||''}catch(e){}
-  $('#pFam').innerHTML=S.familias.map((f,i)=>`<option value="${i}">${esc(f.nome)} (${esc(f.casa)})</option>`).join('');
-  if(vp)$('#pFam').value=vp;
-  if(mesAtual)$('#mes').value=mesAtual;
-  $('#hMes').value=vh;
-  if(!$('#nomesCampos').contains(document.activeElement)){
-    const cls='rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-3 py-2';
-    $('#nomesCampos').innerHTML=S.familias.map((f,i)=>`
-      <div class="grid grid-cols-2 gap-2">
-        <input data-nome="${i}" value="${esc(f.nome)}" aria-label="Nome da família ${i+1}" class="${cls}">
-        <input data-casa="${i}" value="${esc(f.casa)}" aria-label="Casa da família ${i+1}" class="${cls}">
-      </div>`).join('');
-  }
-}
+/* 5. Notas */
+$('#nt').value=ld('note','');
+$('#nt').addEventListener('input',e=>sv('note',e.target.value));
+$('#kp').onclick=async()=>{const t=$('#nt').value.trim();if(!t){$('#ks').textContent='Escreva uma nota primeiro.';return}
+  try{if(navigator.share){await navigator.share({title:'Ideias do Dia',text:t});$('#ks').textContent='Escolha o Google Keep na lista de compartilhamento.';return}}catch(e){if(e&&e.name==='AbortError')return}
+  try{await navigator.clipboard.writeText(t);$('#ks').textContent='Nota copiada. Cole no Google Keep.'}catch(e){$('#ks').textContent='Copie o texto manualmente e cole no Google Keep.'}
+  window.open('https://keep.google.com','_blank','noopener')};
 
-/* ---------- caixinha (Outros) ---------- */
-const totFundo=f=>Object.values(f.contribs).reduce((t,c)=>t+c.valor,0);
-const sugerido=f=>f.sugerido>0?f.sugerido:f.meta/S.familias.length;
-function renderFundos(){
-  const F=S.fundos;
-  const tot=F.reduce((t,f)=>t+totFundo(f),0);
-  const falta=F.reduce((t,f)=>t+Math.max(0,f.meta-totFundo(f)),0);
-  const meta=F.reduce((t,f)=>t+f.meta,0);
-  $('#fundoResumo').innerHTML=F.length?`
-    <div class="grid grid-cols-2 gap-3">
-      <div class="rounded-xl border-2 border-green-600 bg-white dark:bg-slate-900 p-3">
-        <div class="text-sm">Total na caixinha</div>
-        <div class="text-2xl font-extrabold text-green-700 dark:text-green-400">${brl(tot)}</div>
-        <div class="text-sm">${F.length} caixinha(s)</div>
-      </div>
-      <div class="rounded-xl border-2 border-red-600 bg-white dark:bg-slate-900 p-3">
-        <div class="text-sm">Falta para a meta</div>
-        <div class="text-2xl font-extrabold text-red-700 dark:text-red-400">${brl(falta)}</div>
-        <div class="text-sm">Meta total: ${brl(meta)}</div>
-      </div>
-    </div>`:'';
-  $('#fundoCards').innerHTML=F.length?F.map(f=>{
-    const t=totFundo(f),pct=f.meta>0?Math.min(100,Math.round(t/f.meta*100)):0,fl=Math.max(0,f.meta-t),sug=sugerido(f);
-    return `<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4">
-      <div class="flex items-start justify-between gap-2">
-        <div class="text-xl font-bold">${esc(f.nome)}</div>
-        <button data-delfundo="${f.id}" class="text-sm text-red-700 dark:text-red-400 underline shrink-0" aria-label="Apagar caixinha ${esc(f.nome)}">🗑️ Apagar</button>
-      </div>
-      <div class="mt-2">Arrecadado: <b class="text-green-700 dark:text-green-400">${brl(t)}</b> de ${brl(f.meta)}</div>
-      <div class="mt-2 h-5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><div class="h-full bg-green-600" style="width:${pct}%"></div></div>
-      <div class="text-sm mt-1">${pct}% da meta — ${fl>0?'faltam '+brl(fl):'meta alcançada! 🎉'}</div>
-      <div class="mt-3 space-y-2">${S.familias.map((fa,i)=>{const c=f.contribs[i];return `
-        <div class="flex flex-wrap items-center gap-2">
-          <span class="font-semibold">${esc(fa.nome)}</span>
-          ${c?`<span class="bg-green-100 text-green-900 dark:bg-green-900 dark:text-green-50 rounded-full px-3 py-1 font-semibold">🟢 PAGO ${brl(c.valor)} em ${dm(c.data)}</span>`
-             :`<span class="bg-red-100 text-red-900 dark:bg-red-900 dark:text-red-50 rounded-full px-3 py-1 font-semibold">🔴 PENDENTE (sugerido ${brl(sug)})</span>`}
-        </div>`}).join('')}</div>
-    </div>`}).join('')
-    :`<p class="rounded-xl bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-600 p-4">Nenhuma caixinha criada ainda. Use o formulário “Nova caixinha” aqui embaixo para criar a primeira.</p>`;
-  const sel=$('#cFundo'),v=sel.value;
-  sel.innerHTML=F.map(f=>`<option value="${f.id}">${esc(f.nome)}</option>`).join('')||'<option value="">Crie uma caixinha primeiro</option>';
-  if(F.some(f=>f.id===v))sel.value=v;
-  const sf=$('#cFam'),vf=sf.value;
-  sf.innerHTML=S.familias.map((f,i)=>`<option value="${i}">${esc(f.nome)} (${esc(f.casa)})</option>`).join('');
-  if(vf)sf.value=vf;
-  if(!$('#cValor').value)preencherValor();
-}
-function preencherValor(){const f=S.fundos.find(x=>x.id===$('#cFundo').value);$('#cValor').value=f?sugerido(f).toFixed(2):''}
+/* 6. Manchetes */
+let H=ld('news',[]);
+function renderH(){$('#hl').innerHTML=H.map((h,i)=>'<li><span>'+esc(h)+'</span><button data-i="'+i+'" aria-label="Remover">×</button></li>').join('')}
+$('#ha').onclick=()=>{const v=$('#hn').value.trim();if(!v)return;H.unshift(v);H=H.slice(0,15);sv('news',H);$('#hn').value='';renderH()};
+$('#hl').addEventListener('click',e=>{const i=e.target.dataset.i;if(i===undefined)return;H.splice(+i,1);sv('news',H);renderH()});
 
-/* ---------- avisos ---------- */
-let tAviso;
-function aviso(t){const a=$('#aviso');a.textContent=t;a.classList.remove('hidden');clearTimeout(tAviso);tAviso=setTimeout(()=>a.classList.add('hidden'),2800)}
+/* 7. Tracker */
+let W=ld('watch',[]);
+function renderW(){const ok=W.filter(w=>w.x).length;$('#wc2').textContent=ok+'/'+W.length+' itens concluídos';
+  $('#wl').innerHTML=W.map((w,i)=>'<li class="'+(w.x?'done':'')+'"><input type="checkbox" data-c="'+i+'" '+(w.x?'checked':'')+'><span>'+esc(w.t)+' <small class="sub">· '+esc(w.k)+'</small></span><button data-i="'+i+'" aria-label="Remover">×</button></li>').join('')}
+$('#wa').onclick=()=>{const t=$('#wt').value.trim();if(!t)return;W.push({t,k:$('#wk').value,x:false});sv('watch',W);$('#wt').value='';renderW()};
+$('#wl').addEventListener('click',e=>{const d=e.target.dataset;if(d.i!==undefined){W.splice(+d.i,1)}else if(d.c!==undefined){W[+d.c].x=e.target.checked}else return;sv('watch',W);renderW()});
 
-/* ---------- abas ---------- */
-function abrirAba(nome){
-  ['geral','hist','admin','outros'].forEach(n=>$('#aba-'+n).classList.toggle('hidden',n!==nome));
-  document.querySelectorAll('.aba').forEach(b=>{
-    const on=b.dataset.aba===nome;
-    b.classList.toggle('border-b-4',on);b.classList.toggle('border-[#16305a]',on);
-    b.classList.toggle('dark:border-sky-400',on);b.classList.toggle('text-[#16305a]',on);
-    b.classList.toggle('dark:text-sky-300',on);b.setAttribute('aria-selected',on);if(on&&b.scrollIntoView)b.scrollIntoView({inline:'center',block:'nearest'});
-  });
-}
-
-/* ---------- tema ---------- */
-function aplicarTema(escuro){
-  document.documentElement.classList.toggle('dark',escuro);
-  $('#btnTema').textContent=escuro?'☀️':'🌙';
-  try{localStorage.setItem('quintal:tema',escuro?'escuro':'claro')}catch(e){}
-}
-
-/* ---------- resumo WhatsApp ---------- */
-function textoZap(){
-  const it=itens(mesAtual),pg=it.filter(x=>x.pago),pd=it.filter(x=>!x.pago);
-  const soma=a=>brl(a.reduce((t,x)=>t+x.valor,0));
-  let t=`*🏠 Jambalaya — ${nomeMes(mesAtual)}*\n\n🟢 Arrecadado: ${soma(pg)} (${pg.length} de ${it.length})\n🔴 Falta pagar: ${soma(pd)} (${pd.length} de ${it.length})\n`;
-  S.familias.forEach((f,i)=>{
-    t+=`\n*${f.nome}* (${f.casa})\n`;
-    it.filter(x=>x.i===i).forEach(x=>{t+=`${x.conta.ic} ${x.conta.nome} ${vtxt(x.valor)} — ${x.pago?'🟢 Pago em '+dm(x.data):'🔴 Pendente'}\n`});
-  });
-  if(S.fundos.length){
-    t+='\n\n*🏦 Caixinha do quintal*\n';
-    S.fundos.forEach(f=>{
-      t+=`\n*${f.nome}* — ${brl(totFundo(f))} de ${brl(f.meta)}\n`;
-      S.familias.forEach((fa,i)=>{const c=f.contribs[i];t+=`${fa.nome}: ${c?'🟢 '+brl(c.valor)+' em '+dm(c.data):'🔴 Pendente'}\n`});
-    });
-  }
-  return t.trim();
-}
-async function copiar(txt){
-  try{await navigator.clipboard.writeText(txt);return true}catch(e){
-    const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();
-    let ok=false;try{ok=document.execCommand('copy')}catch(e2){}ta.remove();return ok;
-  }
-}
-
-/* ---------- eventos ---------- */
-$('#btnTema').onclick=()=>aplicarTema(!document.documentElement.classList.contains('dark'));
-$('#btnZap').onclick=async()=>aviso(await copiar(textoZap())?'✅ Resumo copiado! Cole no WhatsApp.':'⚠️ Não deu para copiar. Tente de novo.');
-$('#mes').onchange=e=>{mesAtual=e.target.value;render()};
-document.querySelectorAll('.aba').forEach(b=>b.onclick=()=>abrirAba(b.dataset.aba));
-['hBusca','hMes','hStatus'].forEach(id=>$('#'+id).addEventListener('input',renderHist));
-
-$('#fPagar').onsubmit=e=>{
-  e.preventDefault();
-  const i=+$('#pFam').value,k=$('#pConta').value,data=$('#pData').value||hojeISO();
-  const v=valorMes(mesAtual,i,k);
-  if(v==null)return aviso('⚠️ Defina primeiro o valor desta casa em “Valores de cada casa”.');
-  S.pagos[chave(mesAtual,i,k)]={data,valor:v};
-  salvar();render();aviso('✅ Pagamento registrado!');
-};
-$('#btnDesfazer').onclick=()=>{
-  const i=+$('#pFam').value,k=$('#pConta').value,c=chave(mesAtual,i,k);
-  if(!S.pagos[c])return aviso('Esta conta já está pendente.');
-  delete S.pagos[c];salvar();render();aviso('↩️ Pagamento desfeito.');
-};
-$('#fValores').onsubmit=e=>{
-  e.preventDefault();
-  const arr=[];let ok=true,algum=false;
-  S.familias.forEach((f,i)=>{
-    const r={};
-    [['agua','va'],['luz','vl']].forEach(([k,a])=>{
-      const raw=document.querySelector(`[data-${a}="${i}"]`).value.trim();
-      if(raw==='')return;
-      const n=parseFloat(raw);
-      if(isNaN(n)||n<0)ok=false;else{r[k]=n;algum=true}
-    });
-    arr.push(r);
-  });
-  if(!ok)return aviso('⚠️ Digite valores válidos.');
-  if(algum)S.valoresMes[mesAtual]=arr;else delete S.valoresMes[mesAtual];
-  salvar();render();aviso('✅ Valores de '+nomeMes(mesAtual)+' salvos!');
-};
-$('#fNomes').onsubmit=e=>{
-  e.preventDefault();
-  S.familias=S.familias.map((f,i)=>({
-    nome:document.querySelector(`[data-nome="${i}"]`).value.trim()||f.nome,
-    casa:document.querySelector(`[data-casa="${i}"]`).value.trim()||f.casa
-  }));
-  salvar();montarSelects();render();aviso('✅ Nomes salvos!');
-};
-$('#btnLimpar').onclick=()=>{
-  if(confirm('Atenção: isso apaga TODOS os pagamentos, valores e caixinhas de TODOS os celulares. Tem certeza?')&&confirm('Última confirmação: apagar tudo mesmo? Não dá para desfazer.')){
-    S=padrao();salvar();montarSelects();$('#mes').value=mesAtual;render();aviso('Dados apagados.');
-  }
-};
-
-$('#fNovoFundo').onsubmit=e=>{
-  e.preventDefault();
-  const nome=$('#nfNome').value.trim(),meta=parseFloat($('#nfMeta').value),sug=parseFloat($('#nfSug').value)||0;
-  if(!nome||isNaN(meta)||meta<=0)return aviso('⚠️ Preencha o nome e a meta.');
-  S.fundos.push({id:Date.now().toString(36),nome,meta,sugerido:sug,contribs:{}});
-  salvar();e.target.reset();$('#cValor').value='';render();aviso('✅ Caixinha criada!');
-};
-$('#cFundo').onchange=preencherValor;
-$('#fContrib').onsubmit=e=>{
-  e.preventDefault();
-  const f=S.fundos.find(x=>x.id===$('#cFundo').value),valor=parseFloat($('#cValor').value);
-  if(!f)return aviso('⚠️ Crie uma caixinha primeiro.');
-  if(isNaN(valor)||valor<=0)return aviso('⚠️ Digite um valor válido.');
-  f.contribs[$('#cFam').value]={valor,data:$('#cData').value||hojeISO()};
-  salvar();render();aviso('✅ Contribuição registrada!');
-};
-$('#btnDesfazerC').onclick=()=>{
-  const f=S.fundos.find(x=>x.id===$('#cFundo').value),i=$('#cFam').value;
-  if(!f||!f.contribs[i])return aviso('Esta família ainda não contribuiu.');
-  delete f.contribs[i];salvar();render();aviso('↩️ Contribuição desfeita.');
-};
-$('#fundoCards').onclick=e=>{
-  const b=e.target.closest('[data-delfundo]');if(!b)return;
-  const f=S.fundos.find(x=>x.id===b.dataset.delfundo);
-  if(f&&confirm(`Apagar a caixinha “${f.nome}” e tudo o que foi registrado nela?`)){
-    S.fundos=S.fundos.filter(x=>x.id!==f.id);salvar();$('#cValor').value='';render();aviso('Caixinha apagada.');
-  }
-};
-
-/* ---------- valores por casa + "minha casa" ---------- */
-function renderValoresForm(){
-  if($('#valoresCampos').children.length&&$('#valoresCampos').contains(document.activeElement))return;
-  const salvo=S.valoresMes[mesAtual];
-  let base=salvo;
-  if(!base){const ant=Object.keys(S.valoresMes).filter(m=>m<mesAtual).sort().pop();base=ant?S.valoresMes[ant]:null}
-  $('#fValoresMes').textContent='Mês selecionado: '+nomeMes(mesAtual)+(salvo?'':' — valores ainda não definidos'+(base?' (começando com os do último mês definido)':''));
-  const cls='mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-lg';
-  $('#valoresCampos').innerHTML=S.familias.map((f,i)=>{
-    const b=(base&&base[i])||{},v=k=>typeof b[k]==='number'?b[k]:'';
-    return `<div class="rounded-lg border border-slate-200 dark:border-slate-700 p-3">
-      <div class="font-bold mb-2">${esc(f.nome)} (${esc(f.casa)})</div>
-      <div class="grid grid-cols-2 gap-2">
-        <label class="block text-sm">💧 Água (R$)<input data-va="${i}" type="number" step="0.01" min="0" inputmode="decimal" value="${v('agua')}" placeholder="0,00" class="${cls}"></label>
-        <label class="block text-sm">⚡ Luz (R$)<input data-vl="${i}" type="number" step="0.01" min="0" inputmode="decimal" value="${v('luz')}" placeholder="0,00" class="${cls}"></label>
-      </div></div>`}).join('');
-}
-function renderMeu(){
-  const mi=$('#minhaFam').value,box=$('#meuValor');
-  if(mi===''){box.innerHTML=`<p>Escolha seu nome acima para ver quanto você paga em <b>${nomeMes(mesAtual)}</b>.</p>`;return}
-  const mine=itens(mesAtual).filter(x=>x.i===+mi);
-  const tot=mine.reduce((t,x)=>t+x.valor,0),falta=mine.filter(x=>!x.pago).reduce((t,x)=>t+x.valor,0),indef=mine.some(x=>x.valor==null&&!x.pago);
-  box.innerHTML=`<div class="font-semibold mb-1">${esc(S.familias[+mi].nome)} — ${nomeMes(mesAtual)}</div>
-    <div class="space-y-1">${mine.map(x=>`<div class="flex flex-wrap items-center justify-between gap-2 text-lg">
-      <span>${x.conta.ic} ${x.conta.nome}</span><span class="font-extrabold">${vtxt(x.valor)}</span>
-      <span class="text-sm">${x.pago?'🟢 Pago em '+dm(x.data):x.valor==null?'⏳ A definir':'🔴 Pendente'}</span></div>`).join('')}</div>
-    <div class="border-t border-amber-300 dark:border-slate-600 mt-2 pt-2 flex justify-between text-xl"><span class="font-bold">Total do mês</span><span class="font-extrabold">${brl(tot)}</span></div>
-    <div class="mt-1 text-lg">${falta>0?`🔴 Falta pagar: <b>${brl(falta)}</b>`:indef?'⏳ O valor deste mês ainda não foi definido.':'🟢 Tudo pago neste mês. Obrigado!'}</div>`;
-}
-$('#minhaFam').onchange=e=>{try{localStorage.setItem('quintal:minhaFam',e.target.value)}catch(err){}renderMeu()};
-
-/* ---------- nuvem (Firebase Realtime Database) ---------- */
-function nuvemAtiva(){
-  return typeof firebase!=='undefined'&&/^https:\/\//.test(FIREBASE_CONFIG.databaseURL)&&FIREBASE_CONFIG.databaseURL.indexOf('SEU-PROJETO')<0;
-}
-function estadoNuvem(e){
-  const t={on:'☁️ Ao vivo',off:'📴 Sem conexão',local:'💾 Só neste aparelho',erro:'⚠️ Nuvem indisponível'}[e]||'';
-  $('#nuvem').textContent=t?'· '+t:'';
-}
-function aplicarRemoto(d){
-  S=d?normalizar(d):padrao();
-  if(d){try{localStorage.setItem(CHAVE,JSON.stringify(S))}catch(e){}}
-  montarSelects();render();
-}
-function iniciarNuvem(){
-  if(!nuvemAtiva()){estadoNuvem('local');return}
-  try{
-    if(!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG);
-    const db=firebase.database();
-    nuvem=db.ref(NUVEM_CAMINHO);
-    db.ref('.info/connected').on('value',s=>estadoNuvem(s.val()?'on':'off'));
-    let primeira=true;
-    nuvem.on('value',snap=>{
-      const d=snap.val();
-      if(d){
-        try{localStorage.setItem(MIGRADO,'1')}catch(e){}
-        aplicarRemoto(d);
-      }else if(primeira&&localStorage.getItem(CHAVE)&&!localStorage.getItem(MIGRADO)){
-        // nuvem vazia: envia os dados que já existiam neste aparelho (só na primeira vez)
-        try{localStorage.setItem(MIGRADO,'1')}catch(e){}
-        salvar();
-      }else{
-        aplicarRemoto(null);
-      }
-      primeira=false;
-    },()=>{estadoNuvem('erro');aviso('⚠️ Sem acesso à nuvem. Confira as regras do banco.')});
-  }catch(e){nuvem=null;estadoNuvem('erro')}
-}
-
-/* ---------- instalar como app ---------- */
-let adiado=null;
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();adiado=e;$('#btnInstalar').classList.remove('hidden')});
-window.addEventListener('appinstalled',()=>$('#btnInstalar').classList.add('hidden'));
-$('#btnInstalar').onclick=async()=>{
-  if(!adiado)return;
-  adiado.prompt();
-  try{await adiado.userChoice}catch(e){}
-  adiado=null;$('#btnInstalar').classList.add('hidden');
-};
-
-/* ---------- início ---------- */
-(function iniciar(){
-  aplicarTema(document.documentElement.classList.contains('dark'));
-  montarSelects();
-  mesAtual=`${new Date().getFullYear()}-${p2(new Date().getMonth()+1)}`;
-  if(!MES_LISTA.includes(mesAtual))mesAtual=mesAtual<MES_LISTA[0]?MES_LISTA[0]:MES_LISTA[MES_LISTA.length-1];
-  $('#mes').value=mesAtual;$('#hMes').value='todos';$('#pData').value=hojeISO();$('#cData').value=hojeISO();
-  abrirAba('geral');render();iniciarNuvem();
-  try{localStorage.removeItem('quintal:acessos')}catch(e){}
-  tick();setInterval(tick,1000);
-})();
+syncPlan();renderPlan();renderF();renderI();renderH();renderW();
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}
 </script>
 </body>
 </html>
