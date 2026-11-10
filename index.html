@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Rotina Dashboard</title>
-<meta name="theme-color" content="#0f1117">
+<meta name="theme-color" content="#0b0d13">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -49,19 +49,35 @@ li span{flex:1}li.done span{text-decoration:line-through;color:var(--mut)}
 .lk{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .lk a{background:var(--bg);border:1px solid var(--ln);border-radius:12px;padding:10px 6px;text-align:center;color:var(--tx);text-decoration:none;font-size:13.5px}
 .hide{display:none}.pos{color:#4ade80}.neg{color:#f87171}
+
+body{background:radial-gradient(900px 500px at 85% -10%,rgba(168,85,247,.16),transparent 60%),radial-gradient(700px 400px at -10% 10%,rgba(34,211,238,.11),transparent 60%),#0b0d13}
+.card{border-color:rgba(34,211,238,.18);box-shadow:0 0 0 1px rgba(168,85,247,.06),0 8px 28px rgba(0,0,0,.45)}
+#clk,.big{text-shadow:0 0 14px rgba(34,211,238,.45)}
+main{padding-bottom:100px}
+#wb{z-index:70}
+#nav{position:fixed;left:0;right:0;bottom:0;z-index:60;display:flex;justify-content:space-around;gap:4px;padding:6px 8px calc(env(safe-area-inset-bottom,0px) + 6px);background:rgba(11,13,19,.93);backdrop-filter:blur(10px);border-top:1px solid var(--ln)}
+#nav button{flex:1;flex-direction:column;background:transparent;color:var(--mut);font-size:11px;font-weight:600;gap:2px;padding:4px 2px;min-height:50px;border-radius:12px;display:flex;align-items:center}
+#nav button i{font-style:normal;font-size:20px}
+#nav button.on{color:var(--ac);background:rgba(34,211,238,.1);box-shadow:0 0 12px rgba(34,211,238,.25)}
+.sheet{position:fixed;inset:0;z-index:40;background:#0b0d13;overflow-y:auto;display:none;padding-top:env(safe-area-inset-top,0px)}
+.sheet.open{display:block;animation:up .2s ease-out}
+@keyframes up{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+.sin{max-width:640px;margin:0 auto;padding:14px 14px 110px}
+.sin h1{font-size:20px;margin:6px 0 12px}
+.bd{font-size:12px;font-weight:700;border-radius:10px;padding:2px 8px;white-space:nowrap}
+.bd.g{background:rgba(34,197,94,.18);color:#4ade80}.bd.y{background:rgba(245,158,11,.18);color:#fbbf24}.bd.r{background:rgba(239,68,68,.2);color:#f87171}.bd.n{background:rgba(148,163,184,.15);color:#94a3b8}
+#ml .row input{max-width:130px}
 </style>
 </head>
 <body>
 <div id="wb"><div id="wbt">💧 Hora de Hidratar!</div></div>
 <main>
-
 <section class="card">
   <div class="hd">
     <div><div id="clk">--:--:--</div><div class="sub" id="dt"></div><div><b>São Paulo</b></div></div>
     <div style="text-align:right"><div style="font-size:30px;font-weight:700" id="tp">--°</div><div class="sub" id="wc">Clima…</div><div class="sub" id="mm"></div></div>
   </div>
 </section>
-
 <section class="card">
   <h2>📅 CRONOGRAMA REORGANIZADO DO DIA</h2>
   <div class="row"><label>Dia <select id="day"></select></label><label>Acordar <input type="time" id="wake"></label><label id="friL" class="hide">Sexta <select id="fri"><option>Poker (revisão de mãos/teoria)</option><option>IA</option></select></label></div>
@@ -75,7 +91,6 @@ li span{flex:1}li.done span{text-decoration:line-through;color:var(--mut)}
   <p class="sub" id="fc"></p>
   <p class="sub" id="tp2"></p>
 </section>
-
 <section class="card">
   <h2>🎯 MODO FOCO</h2>
   <p class="sub">Uma coisa por vez: escolha o tempo, comece e ignore o resto.</p>
@@ -84,41 +99,44 @@ li span{flex:1}li.done span{text-decoration:line-through;color:var(--mut)}
   <div class="row" style="justify-content:center"><button id="go">Começar</button><button class="ghost" id="zr">Zerar</button></div>
   <p class="sub" style="text-align:center;margin:4px 0 0"><b id="fh">FOCOS HOJE: 0</b> · <span id="xp">0 XP</span> · +20 XP por ciclo</p>
 </section>
-
-<section class="card">
-  <h2>💵 RENDA GERAL &amp; FINANÇAS</h2>
+</main>
+<div class="sheet" id="s-vida"><div class="sin"><h1>Vida adulta &amp; moto</h1><section class="card"><h2>🏍️ MANUTENÇÃO DA MOTO</h2>
+<div class="row"><label>KM atual <input type="number" inputmode="numeric" id="mkm"></label></div>
+<div id="ml"></div></section>
+<section class="card"><h2>📆 VENCIMENTOS &amp; IMPOSTOS</h2>
+<div class="row"><select id="vt"><option>IPVA / Licenciamento</option><option>MEI / DAS</option><option>CNH</option><option>Conta fixa</option><option>Outro</option></select><input type="text" id="vn" placeholder="Nome (opcional)"></div>
+<div class="row"><input type="date" id="vd"><label class="chk"><input type="checkbox" id="vr"> Repete todo mês</label><button id="va">+</button></div>
+<ul id="vl"></ul></section></div></div><div class="sheet" id="s-renda"><div class="sin"><h1>Renda &amp; finanças</h1><section class="card">
+  
   <div class="grid" id="mt"></div>
   <div class="row"><button class="opt on" data-t="ifood">🛵 iFood</button><button class="opt" data-t="poker">🃏 Poker</button><button class="opt" data-t="livre">🟡 Livres</button></div>
   <p class="sub" id="tn"></p>
   <div class="row"><input type="number" step="0.01" id="iv" placeholder="Valor (R$)"><input type="text" id="in" placeholder="Nota (opcional)"><button id="ia">+</button></div>
   <div class="row" id="bkr"><label>Banca inicial (R$) <input type="number" step="0.01" id="bk"></label></div>
   <ul id="il"></ul>
-</section>
-
-<section class="card">
-  <h2>📝 IDEIAS DO DIA / BRAIN DUMP</h2>
+</section></div></div><div class="sheet" id="s-notas"><div class="sin"><h1>Notas &amp; Keep</h1><section class="card">
+  
   <textarea id="nt" placeholder="Descarregue o cérebro aqui…"></textarea>
   <div class="row"><a class="btn" href="intent://#Intent;action=android.intent.action.SHOW_ALARMS;end">⏰ Criar Alarme no Celular</a><button id="kp">📌 Enviar para o Google Keep</button></div>
   <p class="sub" id="ks"></p>
-</section>
-
-<section class="card">
+</section></div></div><div class="sheet" id="s-midia"><div class="sin"><h1>Mural geek &amp; mídia</h1><section class="card">
   <h2>📰 MURAL GEEK &amp; NOTÍCIAS</h2>
   <p class="sub">Tecnologia</p><div class="lk"><a href="https://www.tecmundo.com.br" target="_blank" rel="noopener">TecMundo</a><a href="https://tecnoblog.net" target="_blank" rel="noopener">Tecnoblog</a><a href="https://www.theverge.com" target="_blank" rel="noopener">The Verge</a></div>
   <p class="sub" style="margin-top:10px">Anime</p><div class="lk"><a href="https://www.animenewsnetwork.com" target="_blank" rel="noopener">Anime News Network</a><a href="https://www.crunchyroll.com/news" target="_blank" rel="noopener">Crunchyroll News</a><a href="https://www.animeunited.com.br" target="_blank" rel="noopener">AnimeUnited</a></div>
   <p class="sub" style="margin-top:10px">Cinema</p><div class="lk"><a href="https://www.omelete.com.br" target="_blank" rel="noopener">Omelete</a><a href="https://www.adorocinema.com" target="_blank" rel="noopener">AdoroCinema</a><a href="https://variety.com" target="_blank" rel="noopener">Variety</a></div>
   <div class="row"><input type="text" id="hn" placeholder="Manchete do dia"><button id="ha">+</button></div>
   <ul id="hl"></ul>
-</section>
-
-<section class="card">
+</section><section class="card">
   <h2>🎬 PARA ASSISTIR, LER E JOGAR</h2>
   <div class="row"><input type="text" id="wt" placeholder="Título do item"><select id="wk"><option>Série</option><option>Anime</option><option>Filme</option><option>Game</option><option>Livro</option></select><button id="wa">+ Adicionar</button></div>
   <p class="sub" id="wc2">0/0 itens concluídos</p>
   <ul id="wl"></ul>
-</section>
-
-</main>
+</section></div></div><div class="sheet" id="s-cook"><div class="sin"><h1>Caderno de culinária</h1><section class="card"><h2>🍳 CADERNO DE CULINÁRIA</h2><p class="sub">Terça: aprender 1 receita. Salve aqui.</p>
+<div class="row"><input type="text" id="rn" placeholder="Nome do prato"></div>
+<div class="row"><input type="text" id="ri" placeholder="Ingredientes principais"></div>
+<div class="row"><select id="rd"><option>Fácil</option><option>Média</option><option>Difícil</option></select><select id="rs"><option value="5">⭐⭐⭐⭐⭐</option><option value="4">⭐⭐⭐⭐</option><option value="3">⭐⭐⭐</option><option value="2">⭐⭐</option><option value="1">⭐</option></select><button id="ra">+ Salvar</button></div>
+<ul id="rl"></ul></section></div></div>
+<nav id="nav"><button data-s="vida"><i>🛠️</i>Vida</button><button data-s="renda"><i>💵</i>Renda</button><button data-s="notas"><i>📝</i>Notas</button><button data-s="midia"><i>📰</i>Mídia</button><button data-s="cook"><i>🍳</i>Receitas</button></nav>
 <script>
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -250,7 +268,38 @@ function renderW(){const ok=W.filter(w=>w.x).length;$('#wc2').textContent=ok+'/'
 $('#wa').onclick=()=>{const t=$('#wt').value.trim();if(!t)return;W.push({t,k:$('#wk').value,x:false});sv('watch',W);$('#wt').value='';renderW()};
 $('#wl').addEventListener('click',e=>{const d=e.target.dataset;if(d.i!==undefined){W.splice(+d.i,1)}else if(d.c!==undefined){W[+d.c].x=e.target.checked}else return;sv('watch',W);renderW()});
 
-syncPlan();renderPlan();renderF();renderI();renderH();renderW();
+
+/* Moto */
+const MI=[['oleo','Troca de óleo'],['pneus','Pneus'],['kit','Kit relação'],['pastilha','Pastilhas de freio']];
+let MO=ld('moto',{km:'',i:{}});
+const bd=(c,t)=>'<span class="bd '+c+'">'+t+'</span>';
+function renderM(){$('#mkm').value=MO.km;const cur=parseFloat(MO.km);
+  $('#ml').innerHTML=MI.map(([k,n])=>{const it=MO.i[k]||{},nx=parseFloat(it.next);let b=bd('n','Defina o próx. KM');
+    if(!isNaN(nx)&&!isNaN(cur)){const r=nx-cur;b=r<=0?bd('r','🔴 Vencida'):r<=500?bd('y','🟡 Faltam '+r+' km'):bd('g','🟢 Faltam '+r+' km')}
+    const f=(l,t,x)=>'<label>'+l+' <input type="'+t+'" '+(t==='number'?'inputmode="numeric" ':'')+'data-mk="'+k+'" data-f="'+x+'" value="'+esc(it[x]||'')+'"></label>';
+    return '<div class="blk gym"><div class="row" style="margin:0;justify-content:space-between"><b>'+n+'</b>'+b+'</div><div class="row">'+f('Feito em KM','number','km')+f('Data','date','d')+f('Próx. KM','number','next')+'</div></div>'}).join('')}
+$('#mkm').addEventListener('change',e=>{MO.km=e.target.value;sv('moto',MO);renderM()});
+$('#ml').addEventListener('change',e=>{const d=e.target.dataset;if(!d.mk)return;(MO.i[d.mk]=MO.i[d.mk]||{})[d.f]=e.target.value;sv('moto',MO);renderM()});
+/* Vencimentos */
+let V=ld('venc',[]);
+const mk=(y,m,dd)=>y+'-'+pad(m)+'-'+pad(Math.min(dd,new Date(y,m,0).getDate()));
+const nxt=v=>{if(!v.r)return v.d;const dd=+v.d.slice(8),t=td();let y=+t.slice(0,4),m=+t.slice(5,7),c=mk(y,m,dd);if(c<t){m++;if(m>12){m=1;y++}c=mk(y,m,dd)}return c};
+const days=d=>Math.round((new Date(d+'T00:00:00')-new Date(td()+'T00:00:00'))/864e5);
+function renderV(){const L=V.map((v,i)=>({...v,i,nd:nxt(v)})).sort((a,b)=>a.nd.localeCompare(b.nd));
+  $('#vl').innerHTML=L.map(v=>{const n=days(v.nd);let b=bd('g','🟢 Em dia');if(n<=7)b=bd('r',n<0?'🔴 Vencido':'🔴 Urgente');else if(v.nd.slice(0,7)===td().slice(0,7))b=bd('y','🟡 Vence este mês');
+    return '<li><span><b>'+esc(v.n)+'</b><br><small class="sub">'+v.nd.slice(8)+'/'+v.nd.slice(5,7)+'/'+v.nd.slice(0,4)+(v.r?' · todo mês':'')+'</small></span>'+b+'<button data-i="'+v.i+'" aria-label="Remover">×</button></li>'}).join('')||'<li class="sub">Nenhum vencimento ainda.</li>'}
+$('#va').onclick=()=>{const d=$('#vd').value;if(!d)return;const t=$('#vt').value,n=$('#vn').value.trim();V.push({n:n?t+': '+n:t,d,r:$('#vr').checked});sv('venc',V);$('#vn').value='';$('#vd').value='';$('#vr').checked=false;renderV()};
+$('#vl').addEventListener('click',e=>{const i=e.target.dataset.i;if(i===undefined)return;V.splice(+i,1);sv('venc',V);renderV()});
+/* Culinária */
+let R=ld('rec',[]);
+function renderR(){$('#rl').innerHTML=R.map((r,i)=>'<li><span><b>'+esc(r.n)+'</b> '+'⭐'.repeat(r.s)+'<br><small class="sub">'+esc(r.d)+(r.i?' · '+esc(r.i):'')+' · '+r.t.slice(8)+'/'+r.t.slice(5,7)+'</small></span><button data-i="'+i+'" aria-label="Remover">×</button></li>').join('')||'<li class="sub">Nenhuma receita ainda.</li>'}
+$('#ra').onclick=()=>{const n=$('#rn').value.trim();if(!n)return;R.unshift({n,i:$('#ri').value.trim(),d:$('#rd').value,s:+$('#rs').value,t:td()});sv('rec',R);$('#rn').value='';$('#ri').value='';renderR()};
+$('#rl').addEventListener('click',e=>{const i=e.target.dataset.i;if(i===undefined)return;R.splice(+i,1);sv('rec',R);renderR()});
+/* Navegação */
+document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>{const el=document.getElementById('s-'+b.dataset.s),was=el.classList.contains('open');
+  document.querySelectorAll('.sheet').forEach(x=>x.classList.remove('open'));document.querySelectorAll('#nav button').forEach(x=>x.classList.remove('on'));
+  if(!was){el.classList.add('open');b.classList.add('on');el.scrollTop=0}});
+syncPlan();renderPlan();renderF();renderI();renderH();renderW();renderM();renderV();renderR();
 if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}
 </script>
 </body>
